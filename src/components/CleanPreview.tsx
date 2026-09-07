@@ -14,7 +14,7 @@ import {
   Scissors
 } from 'lucide-react';
 import { CutZone, ImageInfo, StitchOptions } from '../types';
-import { stitchImage } from '../utils/stitcher';
+import { getCachedStitch, getOrGenerateStitchedImage } from '../utils/stitchCache';
 
 interface CleanPreviewProps {
   imageInfo: ImageInfo;
@@ -31,76 +31,107 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
   onCopyClipboard,
   isCopied,
 }) => {
-  // Keep scale at 1.0 (100% native resolution) by default so preview is razor sharp
-  // Users can freely click "Anpassa bredd" or zoom as desired
+  // Check if a stitched result is already cached (e.g. from Compare mode or previous visit)
+  const initialCached = imageInfo.element
+    ? getCachedStitch(imageInfo.element, cutZones, { showSeamMarkers: false })
+    : null;
+
+  // Initialize with fit-width by default so the preview always fits within the viewport
   const [scale, setScale] = useState<number>(1);
   const [format, setFormat] = useState<'png' | 'jpeg'>('png');
   const [showSeams, setShowSeams] = useState<boolean>(false);
-  const [resultBlobUrl, setResultBlobUrl] = useState<string>('');
-  const [isGenerating, setIsGenerating] = useState<boolean>(true);
+  const [resultBlobUrl, setResultBlobUrl] = useState<string>(initialCached ? initialCached.blobUrl : '');
+  const [isGenerating, setIsGenerating] = useState<boolean>(!initialCached);
   const [stats, setStats] = useState<{
     originalHeight: number;
     newHeight: number;
     removedHeight: number;
     cutCount: number;
-  }>({
-    originalHeight: imageInfo.height,
-    newHeight: imageInfo.height,
-    removedHeight: 0,
-    cutCount: 0,
-  });
+  }>(
+    initialCached
+      ? {
+          originalHeight: imageInfo.height,
+          newHeight: initialCached.totalKeptHeight,
+          removedHeight: initialCached.totalCutHeight,
+          cutCount: initialCached.cutCount,
+        }
+      : {
+          originalHeight: imageInfo.height,
+          newHeight: imageInfo.height,
+          removedHeight: 0,
+          cutCount: 0,
+        }
+  );
 
-  const previewCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const previewCanvasRef = useRef<HTMLCanvasElement | null>(initialCached ? initialCached.canvas : null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const previousUrlRef = useRef<string | null>(null);
 
-  // Generate stitched image whenever cut zones or seam options change.
+  // Retrieve or generate stitched image using shared cache.
   // ALWAYS generate a lossless PNG for the preview display so text sharpness is 100% preserved.
   useEffect(() => {
     if (!imageInfo.element) return;
-    setIsGenerating(true);
 
+    let isMounted = true;
     const options: StitchOptions = {
       showSeamMarkers: showSeams,
       seamColor: 'rgba(99, 102, 241, 0.7)',
     };
 
-    const result = stitchImage(imageInfo.element, cutZones, options);
-    previewCanvasRef.current = result.canvas;
+    // Check synchronous cache first - instant switch without spinner if already generated
+    const cached = getCachedStitch(imageInfo.element, cutZones, options);
+    if (cached) {
+      previewCanvasRef.current = cached.canvas;
+      setResultBlobUrl(cached.blobUrl);
+      setStats({
+        originalHeight: imageInfo.height,
+        newHeight: cached.totalKeptHeight,
+        removedHeight: cached.totalCutHeight,
+        cutCount: cached.cutCount,
+      });
+      setIsGenerating(false);
+      return;
+    }
 
-    // Use lossless PNG for preview screen display to guarantee zero compression noise
-    result.canvas.toBlob(
-      (blob) => {
-        if (blob) {
-          if (previousUrlRef.current) {
-            URL.revokeObjectURL(previousUrlRef.current);
-          }
-          const newUrl = URL.createObjectURL(blob);
-          previousUrlRef.current = newUrl;
-          setResultBlobUrl(newUrl);
-        } else {
-          // Fallback to dataURL
-          const dataUrl = result.canvas.toDataURL('image/png');
-          setResultBlobUrl(dataUrl);
-        }
-        setIsGenerating(false);
-      },
-      'image/png'
-    );
-
-    setStats({
-      originalHeight: imageInfo.height,
-      newHeight: result.totalKeptHeight,
-      removedHeight: result.totalCutHeight,
-      cutCount: cutZones.filter((z) => z.enabled).length,
+    setIsGenerating(true);
+    getOrGenerateStitchedImage(imageInfo.element, cutZones, options).then((result) => {
+      if (!isMounted) return;
+      previewCanvasRef.current = result.canvas;
+      setResultBlobUrl(result.blobUrl);
+      setStats({
+        originalHeight: imageInfo.height,
+        newHeight: result.totalKeptHeight,
+        removedHeight: result.totalCutHeight,
+        cutCount: result.cutCount,
+      });
+      setIsGenerating(false);
     });
 
     return () => {
-      if (previousUrlRef.current) {
-        URL.revokeObjectURL(previousUrlRef.current);
-      }
+      isMounted = false;
     };
   }, [imageInfo, cutZones, showSeams]);
+
+  // Helper to calculate fit-width scale based on current container width
+  const calculateFitScale = useCallback(() => {
+    if (scrollContainerRef.current && imageInfo.width > 0) {
+      const containerWidth = scrollContainerRef.current.clientWidth;
+      // On small screens leave minimal padding (24px total) so text gets maximum width; on larger screens 48px
+      const padding = window.innerWidth < 640 ? 24 : 48;
+      const availableWidth = Math.max(160, containerWidth - padding);
+      const fitScale = Number((availableWidth / imageInfo.width).toFixed(2));
+      return Math.max(0.15, Math.min(1.5, fitScale));
+    }
+    return 1;
+  }, [imageInfo.width]);
+
+  // Set scale to fit width as default on load and whenever image dimensions change
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const fitScale = calculateFitScale();
+      setScale(fitScale);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [calculateFitScale]);
 
   // Zoom handlers
   const handleZoom = (delta: number) => {
@@ -108,11 +139,8 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
   };
 
   const handleFitWidth = () => {
-    if (scrollContainerRef.current && imageInfo.width > 0) {
-      const availableWidth = scrollContainerRef.current.clientWidth - 80;
-      const fitScale = Number((availableWidth / imageInfo.width).toFixed(2));
-      setScale(Math.max(0.15, Math.min(2, fitScale)));
-    }
+    const fitScale = calculateFitScale();
+    setScale(fitScale);
   };
 
   const handleResetZoom = () => setScale(1);
@@ -175,6 +203,19 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
         <div className="flex items-center gap-1.5">
           <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs">
             <button
+              id="preview-mode-fit-btn"
+              onClick={handleFitWidth}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded font-medium transition ${
+                scale !== 1
+                  ? 'bg-white text-indigo-700 shadow-xs font-semibold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Anpassa bildens bredd efter skärmen (standard)"
+            >
+              <Maximize2 className="w-3 h-3" />
+              <span>Anpassa bredd</span>
+            </button>
+            <button
               id="preview-mode-100-btn"
               onClick={handleResetZoom}
               className={`flex items-center gap-1 px-2.5 py-1 rounded font-medium transition ${
@@ -186,19 +227,6 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
             >
               <Sparkles className="w-3 h-3 text-indigo-500" />
               <span>100% Skarp</span>
-            </button>
-            <button
-              id="preview-mode-fit-btn"
-              onClick={handleFitWidth}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded font-medium transition ${
-                scale !== 1
-                  ? 'bg-white text-indigo-700 shadow-xs font-semibold'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-              title="Anpassa bildens bredd efter fönstret"
-            >
-              <Maximize2 className="w-3 h-3" />
-              <span>Anpassa bredd</span>
             </button>
           </div>
 
@@ -308,7 +336,7 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
       <div
         ref={scrollContainerRef}
         id="clean-preview-scroll-container"
-        className="flex-1 overflow-auto p-8 bg-slate-100 relative"
+        className="flex-1 overflow-auto p-3 sm:p-6 md:p-8 bg-slate-100 relative"
       >
         {!isGenerating && resultBlobUrl ? (
           <div className="min-w-fit flex flex-col items-center mx-auto pb-12">
@@ -324,7 +352,7 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
               ) : (
                 <div className="flex items-center gap-2 bg-white text-slate-700 border border-slate-200 px-3.5 py-1.5 rounded-full shadow-2xs">
                   <span className="text-slate-600">
-                    Visas förminskad till <strong className="font-mono text-slate-900 font-semibold">{Math.round(scale * 100)}%</strong> för att passa skärmen
+                    Bredd anpassad till skärmen (<strong className="font-mono text-slate-900 font-semibold">{Math.round(scale * 100)}%</strong>)
                   </span>
                   <span className="text-slate-300">•</span>
                   <button

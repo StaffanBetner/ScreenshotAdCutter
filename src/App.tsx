@@ -9,6 +9,7 @@ import { SplitComparison } from './components/SplitComparison';
 import { EmptyDropzone } from './components/EmptyDropzone';
 import { generateSampleArticle, stitchImage } from './utils/stitcher';
 import { detectCandidateAdZones } from './utils/detector';
+import { clearStitchCache, getCachedStitch } from './utils/stitchCache';
 import { Check, Info, Plus, Sliders, Sparkles, X, Eye } from 'lucide-react';
 
 export default function App() {
@@ -50,6 +51,7 @@ export default function App() {
   );
 
   const handleCutZonesChange = (newZones: CutZone[], recordHistory = true) => {
+    clearStitchCache();
     setCutZones(newZones);
     if (recordHistory) {
       pushHistory(newZones);
@@ -59,6 +61,7 @@ export default function App() {
   // Undo / Redo handlers
   const handleUndo = useCallback(() => {
     if (historyIndex > 0) {
+      clearStitchCache();
       const prevZones = history[historyIndex - 1];
       setCutZones(prevZones);
       setHistoryIndex((prev) => prev - 1);
@@ -67,6 +70,7 @@ export default function App() {
 
   const handleRedo = useCallback(() => {
     if (historyIndex < history.length - 1) {
+      clearStitchCache();
       const nextZones = history[historyIndex + 1];
       setCutZones(nextZones);
       setHistoryIndex((prev) => prev + 1);
@@ -79,6 +83,7 @@ export default function App() {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
+        clearStitchCache();
         const info: ImageInfo = {
           url,
           name: fileName,
@@ -184,11 +189,19 @@ export default function App() {
     if (!scrollContainerRef.current || !imageInfo) return;
     const container = scrollContainerRef.current;
     const pixelCoord = edge === 'bottom' ? zone.endY : zone.startY;
-    const scrollRatio = pixelCoord / Math.max(1, imageInfo.height);
-    const scrollableRange = Math.max(0, container.scrollHeight - container.clientHeight);
-    const targetY = scrollRatio * scrollableRange;
-    const offset = edge === 'bottom' ? 100 : 140;
-    container.scrollTo({ top: Math.max(0, targetY - offset), behavior: 'smooth' });
+    const imageWrapper = container.querySelector('#screenshot-canvas-wrapper') as HTMLElement | null;
+
+    if (imageWrapper) {
+      const scale = imageWrapper.clientHeight / Math.max(1, imageInfo.height);
+      const targetY = imageWrapper.offsetTop + pixelCoord * scale;
+      // Position target comfortably in view leaving room for toolbars
+      const offset = edge === 'bottom' ? Math.round(container.clientHeight * 0.45) : Math.round(container.clientHeight * 0.25);
+      container.scrollTo({ top: Math.max(0, targetY - offset), behavior: 'smooth' });
+    } else {
+      const scrollRatio = pixelCoord / Math.max(1, imageInfo.height);
+      const scrollableRange = Math.max(0, container.scrollHeight - container.clientHeight);
+      container.scrollTo({ top: Math.max(0, scrollRatio * scrollableRange - 120), behavior: 'smooth' });
+    }
     setActiveZoneId(zone.id);
   };
 
@@ -241,7 +254,8 @@ export default function App() {
   const handleCopyClipboard = async () => {
     if (!imageInfo?.element) return;
     try {
-      const { canvas } = stitchImage(imageInfo.element, cutZones);
+      const cached = getCachedStitch(imageInfo.element, cutZones, { showSeamMarkers: false });
+      const canvas = cached ? cached.canvas : stitchImage(imageInfo.element, cutZones).canvas;
       canvas.toBlob(async (blob) => {
         if (!blob) return;
         try {
@@ -251,7 +265,7 @@ export default function App() {
           setIsCopied(true);
           showToast('Ren bild kopierad till urklipp!');
           setTimeout(() => setIsCopied(false), 2500);
-        } catch (err) {
+        } catch {
           // Fallback if clipboard API permission restricted
           showToast('Urklipp begränsat i webbläsaren. Ladda ner bilden i stället.');
         }
@@ -264,7 +278,8 @@ export default function App() {
   // Quick export action from top bar
   const handleQuickExport = () => {
     if (!imageInfo?.element) return;
-    const { canvas } = stitchImage(imageInfo.element, cutZones);
+    const cached = getCachedStitch(imageInfo.element, cutZones, { showSeamMarkers: false });
+    const canvas = cached ? cached.canvas : stitchImage(imageInfo.element, cutZones).canvas;
     const link = document.createElement('a');
     const cleanName = imageInfo.name
       ? imageInfo.name.replace(/\.[^/.]+$/, '') + '-ren-artikel.png'

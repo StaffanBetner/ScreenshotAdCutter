@@ -13,7 +13,8 @@ import {
   Layers
 } from 'lucide-react';
 import { CutZone, ImageInfo, StitchOptions } from '../types';
-import { stitchImage, normalizeCutZones, calculateSegments } from '../utils/stitcher';
+import { normalizeCutZones, calculateSegments } from '../utils/stitcher';
+import { getCachedStitch, getOrGenerateStitchedImage } from '../utils/stitchCache';
 
 interface SplitComparisonProps {
   imageInfo: ImageInfo;
@@ -26,8 +27,13 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
   cutZones,
   onBackToEditor,
 }) => {
-  const [cleanUrl, setCleanUrl] = useState<string>('');
-  const [cleanHeight, setCleanHeight] = useState<number>(imageInfo.height);
+  // Check if a stitched result is already cached (e.g. from Clean Preview or prior visit)
+  const initialCached = imageInfo.element
+    ? getCachedStitch(imageInfo.element, cutZones, { showSeamMarkers: false })
+    : null;
+
+  const [cleanUrl, setCleanUrl] = useState<string>(initialCached ? initialCached.blobUrl : '');
+  const [cleanHeight, setCleanHeight] = useState<number>(initialCached ? initialCached.totalKeptHeight : imageInfo.height);
   const [scale, setScale] = useState<number>(0.6);
   const [showSeams, setShowSeams] = useState<boolean>(false);
   const [syncScroll, setSyncScroll] = useState<boolean>(true);
@@ -37,7 +43,6 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
   const leftColRef = useRef<HTMLDivElement>(null);
   const rightColRef = useRef<HTMLDivElement>(null);
   const isSyncingRef = useRef<boolean>(false);
-  const previousUrlRef = useRef<string | null>(null);
 
   // Normalized active cuts to ensure startY <= endY and merged overlaps
   const normalizedCuts = normalizeCutZones(cutZones, imageInfo.height);
@@ -54,35 +59,32 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
     }
   }, [imageInfo.width]);
 
-  // Generate stitched clean image
+  // Retrieve or generate stitched clean image from shared cache
   useEffect(() => {
     if (!imageInfo.element) return;
 
+    let isMounted = true;
     const options: StitchOptions = {
       showSeamMarkers: showSeams,
       seamColor: 'rgba(99, 102, 241, 0.7)',
     };
 
-    const { canvas, totalKeptHeight } = stitchImage(imageInfo.element, cutZones, options);
-    setCleanHeight(totalKeptHeight);
+    // Check synchronous cache first - instant switch without delay
+    const cached = getCachedStitch(imageInfo.element, cutZones, options);
+    if (cached) {
+      setCleanHeight(cached.totalKeptHeight);
+      setCleanUrl(cached.blobUrl);
+      return;
+    }
 
-    canvas.toBlob((blob) => {
-      if (blob) {
-        if (previousUrlRef.current) {
-          URL.revokeObjectURL(previousUrlRef.current);
-        }
-        const newUrl = URL.createObjectURL(blob);
-        previousUrlRef.current = newUrl;
-        setCleanUrl(newUrl);
-      } else {
-        setCleanUrl(canvas.toDataURL('image/png'));
-      }
-    }, 'image/png');
+    getOrGenerateStitchedImage(imageInfo.element, cutZones, options).then((result) => {
+      if (!isMounted) return;
+      setCleanHeight(result.totalKeptHeight);
+      setCleanUrl(result.blobUrl);
+    });
 
     return () => {
-      if (previousUrlRef.current) {
-        URL.revokeObjectURL(previousUrlRef.current);
-      }
+      isMounted = false;
     };
   }, [imageInfo, cutZones, showSeams]);
 
