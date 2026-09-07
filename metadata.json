@@ -1,0 +1,6 @@
+{
+  "name": "Screenshot Ad Cutter",
+  "description": "Klipp smidigt bort reklam och oönskade sektioner i höjdled från långa skärmdumpar och foga samman till en ren bild.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
