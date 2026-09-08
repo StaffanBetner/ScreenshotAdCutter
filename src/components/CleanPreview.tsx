@@ -38,6 +38,7 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
 
   // Initialize with fit-width by default so the preview always fits within the viewport
   const [scale, setScale] = useState<number>(1);
+  const isUserZoomedRef = useRef<boolean>(false);
   const [format, setFormat] = useState<'png' | 'jpeg'>('png');
   const [showSeams, setShowSeams] = useState<boolean>(false);
   const [resultBlobUrl, setResultBlobUrl] = useState<string>(initialCached ? initialCached.blobUrl : '');
@@ -112,38 +113,60 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
   }, [imageInfo, cutZones, showSeams]);
 
   // Helper to calculate fit-width scale based on current container width
-  const calculateFitScale = useCallback(() => {
-    if (scrollContainerRef.current && imageInfo.width > 0) {
-      const containerWidth = scrollContainerRef.current.clientWidth;
+  const calculateFitScale = useCallback(
+    (explicitWidth?: number) => {
+      const container = scrollContainerRef.current;
+      if (!container || !imageInfo.width) return 1;
+      const cw = explicitWidth ?? container.clientWidth;
+      if (cw <= 0) return 1;
+
       // On small screens leave minimal padding (24px total) so text gets maximum width; on larger screens 48px
       const padding = window.innerWidth < 640 ? 24 : 48;
-      const availableWidth = Math.max(160, containerWidth - padding);
+      const safetyMargin = 6;
+      const availableWidth = Math.max(120, cw - padding - safetyMargin);
       const fitScale = Number((availableWidth / imageInfo.width).toFixed(2));
       return Math.max(0.15, Math.min(1.5, fitScale));
-    }
-    return 1;
-  }, [imageInfo.width]);
+    },
+    [imageInfo.width]
+  );
 
-  // Set scale to fit width as default on load and whenever image dimensions change
+  // Set scale to fit width as default on load and watch for container resizing
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const fitScale = calculateFitScale();
-      setScale(fitScale);
-    }, 0);
-    return () => clearTimeout(timer);
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    if (!isUserZoomedRef.current && container.clientWidth > 0) {
+      setScale(calculateFitScale(container.clientWidth));
+    }
+
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (!isUserZoomedRef.current && entry.contentRect.width > 0) {
+          setScale(calculateFitScale(entry.contentRect.width));
+        }
+      }
+    });
+
+    ro.observe(container);
+    return () => ro.disconnect();
   }, [calculateFitScale]);
 
   // Zoom handlers
   const handleZoom = (delta: number) => {
+    isUserZoomedRef.current = true;
     setScale((prev) => Math.min(2.5, Math.max(0.15, Number((prev + delta).toFixed(2)))));
   };
 
   const handleFitWidth = () => {
+    isUserZoomedRef.current = false;
     const fitScale = calculateFitScale();
     setScale(fitScale);
   };
 
-  const handleResetZoom = () => setScale(1);
+  const handleResetZoom = () => {
+    isUserZoomedRef.current = true;
+    setScale(1);
+  };
 
   const handleOpenInNewTab = () => {
     if (resultBlobUrl) {

@@ -43,21 +43,48 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
   const leftColRef = useRef<HTMLDivElement>(null);
   const rightColRef = useRef<HTMLDivElement>(null);
   const isSyncingRef = useRef<boolean>(false);
+  const isUserZoomedRef = useRef<boolean>(false);
 
   // Normalized active cuts to ensure startY <= endY and merged overlaps
   const normalizedCuts = normalizeCutZones(cutZones, imageInfo.height);
   const totalCutHeight = normalizedCuts.reduce((acc, c) => acc + (c.endY - c.startY), 0);
 
-  // Auto-fit scale to column width on mount
+  // Calculate fit scale for comparison column
+  const calculateFitScale = useCallback(
+    (columnWidth?: number) => {
+      const col = leftColRef.current;
+      if (!col || !imageInfo.width) return 0.6;
+      const cw = columnWidth ?? col.clientWidth;
+      if (cw <= 0) return 0.6;
+      const isMobile = window.innerWidth < 640;
+      const padding = isMobile ? 16 : 36;
+      const available = Math.max(100, cw - padding);
+      const fit = Number((available / imageInfo.width).toFixed(2));
+      return Math.max(0.15, Math.min(1.2, fit));
+    },
+    [imageInfo.width]
+  );
+
+  // Auto-fit scale to column width on mount and on column resize
   useEffect(() => {
-    if (leftColRef.current && imageInfo.width > 0) {
-      const colAvailableWidth = leftColRef.current.clientWidth - 48;
-      if (colAvailableWidth > 150) {
-        const fitScale = Number((colAvailableWidth / imageInfo.width).toFixed(2));
-        setScale(Math.max(0.15, Math.min(1.2, fitScale)));
-      }
+    const col = leftColRef.current;
+    if (!col) return;
+
+    if (!isUserZoomedRef.current && col.clientWidth > 0) {
+      setScale(calculateFitScale(col.clientWidth));
     }
-  }, [imageInfo.width]);
+
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (!isUserZoomedRef.current && entry.contentRect.width > 0) {
+          setScale(calculateFitScale(entry.contentRect.width));
+        }
+      }
+    });
+
+    ro.observe(col);
+    return () => ro.disconnect();
+  }, [calculateFitScale, imageInfo.width]);
 
   // Retrieve or generate stitched clean image from shared cache
   useEffect(() => {
@@ -112,18 +139,19 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
 
   // Zoom handlers
   const handleZoom = (delta: number) => {
+    isUserZoomedRef.current = true;
     setScale((prev) => Math.min(2.0, Math.max(0.15, Number((prev + delta).toFixed(2)))));
   };
 
   const handleFitWidth = () => {
-    if (leftColRef.current && imageInfo.width > 0) {
-      const colAvailableWidth = leftColRef.current.clientWidth - 48;
-      const fitScale = Number((colAvailableWidth / imageInfo.width).toFixed(2));
-      setScale(Math.max(0.15, Math.min(1.5, fitScale)));
-    }
+    isUserZoomedRef.current = false;
+    setScale(calculateFitScale());
   };
 
-  const handleResetZoom = () => setScale(1);
+  const handleResetZoom = () => {
+    isUserZoomedRef.current = true;
+    setScale(1);
+  };
 
   // Exact pixel dimensions calculated from scale
   const colPixelWidth = Math.round(imageInfo.width * scale);

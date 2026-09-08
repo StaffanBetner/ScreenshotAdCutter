@@ -49,6 +49,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   scrollContainerRef,
 }) => {
   const [scale, setScale] = useState<number>(1);
+  const isUserZoomedRef = useRef<boolean>(false);
   const [dragMode, setDragMode] = useState<DragMode>(null);
   const [hoverY, setHoverY] = useState<number | null>(null);
   const [isPanelCollapsed, setIsPanelCollapsed] = useState<boolean>(false);
@@ -98,16 +99,60 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
     [scale, scrollContainerRef]
   );
 
-  // Initialize scale to fit width nicely on load
+  // Calculate scale that fits the image width snugly within the viewport
+  const calculateFitScale = useCallback(
+    (explicitContainerWidth?: number) => {
+      const container = scrollContainerRef.current;
+      if (!container || !imageInfo.width) return 1;
+      const cw = explicitContainerWidth ?? container.clientWidth;
+      if (cw <= 0) return 1;
+
+      const isMobile = window.innerWidth < 640;
+      // Pixel ruler: 32px on mobile (w-8), 48px on sm+ (w-12)
+      const rulerW = isMobile ? 32 : 48;
+      // Container padding: 12px*2=24px on mobile (p-3), 24px*2=48px on sm+ (p-6)
+      const paddingW = isMobile ? 24 : 48;
+      // Safety margin to prevent horizontal scrolling / rounding clipping
+      const safetyMargin = 6;
+
+      const availableW = Math.max(120, cw - rulerW - paddingW - safetyMargin);
+      const fit = Number((availableW / imageInfo.width).toFixed(2));
+      return Math.max(0.1, Math.min(1.5, fit));
+    },
+    [imageInfo.width, scrollContainerRef]
+  );
+
+  // Auto-fit scale to page width on load and observe container resize
   useEffect(() => {
-    if (scrollContainerRef.current && imageInfo.width > 0) {
-      const containerW = scrollContainerRef.current.clientWidth - 120; // account for margins & ruler
-      if (containerW > 200) {
-        const fitScale = Math.min(1, Math.max(0.2, containerW / imageInfo.width));
-        setScale(Number(fitScale.toFixed(2)));
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    // Reset user zoom flag on image change so new image always fits width
+    isUserZoomedRef.current = false;
+
+    const applyFit = () => {
+      if (!isUserZoomedRef.current && container.clientWidth > 0) {
+        const fitScale = calculateFitScale(container.clientWidth);
+        setScale(fitScale);
       }
-    }
-  }, [imageInfo.width, scrollContainerRef]);
+    };
+
+    applyFit();
+
+    // Use ResizeObserver to respond dynamically to mobile viewports, orientations, and iframe adjustments
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const width = entry.contentRect.width;
+        if (!isUserZoomedRef.current && width > 0) {
+          const fitScale = calculateFitScale(width);
+          setScale(fitScale);
+        }
+      }
+    });
+
+    ro.observe(container);
+    return () => ro.disconnect();
+  }, [calculateFitScale, imageInfo.width, imageInfo.url, scrollContainerRef]);
 
   // Convert client coordinates to image pixel Y
   const getImagePixelY = useCallback(
@@ -259,17 +304,20 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
   // Zoom helpers
   const handleZoom = (delta: number) => {
+    isUserZoomedRef.current = true;
     setScale((prev) => Math.min(2.5, Math.max(0.15, Number((prev + delta).toFixed(2)))));
   };
 
   const handleFitWidth = () => {
-    if (scrollContainerRef.current && imageInfo.width > 0) {
-      const containerW = scrollContainerRef.current.clientWidth - 120;
-      setScale(Number((containerW / imageInfo.width).toFixed(2)));
-    }
+    isUserZoomedRef.current = false;
+    const fitScale = calculateFitScale();
+    setScale(fitScale);
   };
 
-  const handleResetZoom = () => setScale(1);
+  const handleResetZoom = () => {
+    isUserZoomedRef.current = true;
+    setScale(1);
+  };
 
   // Quick nudge for fine tuning
   const handleNudge = (zoneId: string, deltaY: number, edge: 'top' | 'bottom' | 'both') => {

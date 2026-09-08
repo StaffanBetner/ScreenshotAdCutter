@@ -144,330 +144,427 @@ export function stitchImage(
 }
 
 /**
+ * Utility helper to measure and render wrapped text within a maximum width in Canvas 2D
+ */
+function drawWrappedText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number
+): number {
+  const words = text.split(' ');
+  let currentLine = '';
+  let currentY = y;
+
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    const testWidth = ctx.measureText(testLine).width;
+
+    if (testWidth > maxWidth && currentLine) {
+      ctx.fillText(currentLine, x, currentY);
+      currentLine = word;
+      currentY += lineHeight;
+    } else {
+      currentLine = testLine;
+    }
+  }
+
+  if (currentLine) {
+    ctx.fillText(currentLine, x, currentY);
+    currentY += lineHeight;
+  }
+
+  return currentY;
+}
+
+/**
  * Generates an ultra-realistic tall sample Swedish article screenshot complete with 3 obvious ads
  */
 export function generateSampleArticle(): Promise<{ dataUrl: string; width: number; height: number; suggestedCuts: CutZone[] }> {
   return new Promise((resolve) => {
-    const width = 860;
-    const height = 3300;
+    const width = 800;
+    const maxDraftHeight = 3600;
     const canvas = document.createElement('canvas');
     canvas.width = width;
-    canvas.height = height;
+    canvas.height = maxDraftHeight;
     const ctx = canvas.getContext('2d')!;
 
-    // Background
-    ctx.fillStyle = '#f8fafc';
-    ctx.fillRect(0, 0, width, height);
-
-    // Main Article Card
-    const cardX = 40;
-    const cardWidth = width - cardX * 2;
+    // Background: Clean full-width article canvas
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(cardX, 0, cardWidth, height);
+    ctx.fillRect(0, 0, width, maxDraftHeight);
 
-    // Top Brand Navbar
+    const margin = 44;
+    const contentWidth = width - margin * 2;
+
+    // Top Brand Navbar (Full width)
     ctx.fillStyle = '#0f172a';
-    ctx.fillRect(0, 0, width, 68);
+    ctx.fillRect(0, 0, width, 64);
 
     ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('NORDISK TEKNIK & FRAMTID', cardX, 42);
+    ctx.font = 'bold 19px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('NORDISK TEKNIK & FRAMTID', margin, 40);
 
     ctx.fillStyle = '#94a3b8';
-    ctx.font = '13px sans-serif';
-    ctx.fillText('Måndag • Lästid ca 4 min • Premium', width - 280, 42);
+    ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    const metaTag = 'Måndag • Lästid ca 4 min • Premium';
+    const metaW = ctx.measureText(metaTag).width;
+    ctx.fillText(metaTag, width - margin - metaW, 40);
 
-    let y = 110;
+    let y = 100;
 
     // Breadcrumb / Category
     ctx.fillStyle = '#2563eb';
-    ctx.font = 'bold 13px sans-serif';
-    ctx.fillText('ANALYS & SAMHÄLLE', cardX + 30, y);
-    y += 35;
+    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('ANALYS & DIGITALT FOKUS', margin, y);
+    y += 32;
 
-    // Headline
+    // Headline (Wrapped cleanly)
     ctx.fillStyle = '#0f172a';
-    ctx.font = 'bold 34px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Georgia, serif';
-    ctx.fillText('Så navigerar vi det digitala', cardX + 30, y);
-    y += 44;
-    ctx.fillText('informationsflödet utan avbrott', cardX + 30, y);
-    y += 42;
+    ctx.font = 'bold 30px Georgia, Cambria, "Times New Roman", serif';
+    y = drawWrappedText(ctx, 'Så navigerar vi det digitala informationsflödet utan avbrott', margin, y, contentWidth, 40);
+    y += 10;
 
-    // Ingress
+    // Ingress (Wrapped cleanly)
     ctx.fillStyle = '#334155';
-    ctx.font = '500 18px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillText('Långa texter och artiklar blir allt svårare att spara och dela', cardX + 30, y);
-    y += 28;
-    ctx.fillText('när skärmdumpar bryts av massiva banners och sponsrat brus.', cardX + 30, y);
-    y += 40;
+    ctx.font = '500 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    y = drawWrappedText(
+      ctx,
+      'Långa texter och artiklar blir allt svårare att spara och arkivera när skärmdumpar bryts av massiva annonser och sponsrat brus. Här är metoden för att återta läsron.',
+      margin,
+      y,
+      contentWidth,
+      27
+    );
+    y += 20;
 
     // Author byline
     ctx.fillStyle = '#e2e8f0';
     ctx.beginPath();
-    ctx.arc(cardX + 50, y + 5, 20, 0, Math.PI * 2);
+    ctx.arc(margin + 18, y + 16, 18, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#475569';
-    ctx.font = 'bold 15px sans-serif';
-    ctx.fillText('EL', cardX + 41, y + 11);
+    ctx.fillStyle = '#334155';
+    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('EL', margin + 10, y + 21);
 
-    ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 14px sans-serif';
-    ctx.fillText('Emma Lindqvist', cardX + 85, y);
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('Emma Lindqvist', margin + 46, y + 12);
     ctx.fillStyle = '#64748b';
-    ctx.font = '13px sans-serif';
-    ctx.fillText('Teknikskribent • Uppdaterad idag 11:20', cardX + 85, y + 20);
-    y += 65;
+    ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('Teknikskribent • Uppdaterad idag 11:20', margin + 46, y + 30);
+    y += 56;
 
     // Hero Image Illustration Box
-    const heroH = 340;
-    const heroGrad = ctx.createLinearGradient(cardX + 30, y, cardX + 30 + cardWidth - 60, y + heroH);
+    const heroH = 280;
+    const heroGrad = ctx.createLinearGradient(margin, y, margin + contentWidth, y + heroH);
     heroGrad.addColorStop(0, '#1e293b');
     heroGrad.addColorStop(1, '#0f172a');
     ctx.fillStyle = heroGrad;
     ctx.beginPath();
-    ctx.roundRect(cardX + 30, y, cardWidth - 60, heroH, 12);
+    ctx.roundRect(margin, y, contentWidth, heroH, 10);
     ctx.fill();
 
     // Decorative shapes inside hero
-    ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.16)';
     ctx.beginPath();
-    ctx.arc(cardX + 200, y + 170, 110, 0, Math.PI * 2);
+    ctx.arc(margin + 170, y + 140, 95, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = 'rgba(147, 51, 234, 0.2)';
+    ctx.fillStyle = 'rgba(147, 51, 234, 0.18)';
     ctx.beginPath();
-    ctx.arc(cardX + 450, y + 140, 140, 0, Math.PI * 2);
+    ctx.arc(margin + 400, y + 120, 115, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 22px sans-serif';
-    ctx.fillText('Skärmens anatomi: Från brus till fokus', cardX + 70, y + 175);
+    ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('Skärmens anatomi: Från brus till fokus', margin + 32, y + 145);
     ctx.fillStyle = '#94a3b8';
-    ctx.font = '14px sans-serif';
-    ctx.fillText('Illustration: Nordic Tech Studio', cardX + 70, y + 205);
-    y += heroH + 45;
+    ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('Illustration: Nordic Tech Studio', margin + 32, y + 175);
+    y += heroH + 36;
 
     // Paragraph 1
     ctx.fillStyle = '#1e293b';
     ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    const text1 = [
-      'När vi läser digitala reportage på telefonen eller datorn är upplevelsen ofta fragmenterad.',
-      'Varje scrollrörelse ackompanjeras av instick, nyhetsbrevsinbjudningar och banners',
-      'som rycker läsarens uppmärksamhet från innehållet.',
-      '',
-      'Att spara en artikel som en sammanhängande skärmdump är ett fantastiskt sätt att bevara',
-      'kunskap, citera källor och arkivera texter för offline-läsning. Men när hälften av bildens',
-      'höjd består av annonser förlorar dokumentet sitt värde.',
-    ];
-    text1.forEach((line) => {
-      ctx.fillText(line, cardX + 30, y);
-      y += 26;
-    });
-
-    y += 20;
+    y = drawWrappedText(
+      ctx,
+      'När vi läser digitala reportage på telefonen eller datorn är upplevelsen ofta fragmenterad. Varje scrollrörelse ackompanjeras av instick, nyhetsbrevsinbjudningar och banners som rycker läsarens uppmärksamhet från innehållet.',
+      margin,
+      y,
+      contentWidth,
+      26
+    );
+    y += 12;
+    y = drawWrappedText(
+      ctx,
+      'Att spara en artikel som en sammanhängande skärmdump är ett fantastiskt sätt att bevara kunskap, citera källor och arkivera texter för offline-läsning. Men när hälften av bildens höjd består av annonser förlorar dokumentet sitt värde.',
+      margin,
+      y,
+      contentWidth,
+      26
+    );
+    y += 30;
 
     // ==========================================
-    // AD 1: BIG BANNER AD
+    // AD 1: BIG BANNER AD (Full-width)
     // ==========================================
     const ad1Start = y;
-    const ad1Height = 280;
+    const ad1Height = 270;
 
-    // Ad background container with obvious ad style
+    // Ad background container across full canvas width
     ctx.fillStyle = '#fff7ed';
-    ctx.fillRect(cardX, ad1Start, cardWidth, ad1Height);
+    ctx.fillRect(0, ad1Start, width, ad1Height);
 
-    ctx.strokeStyle = '#fed7aa';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(cardX, ad1Start, cardWidth, ad1Height);
+    ctx.fillStyle = '#fed7aa';
+    ctx.fillRect(0, ad1Start, width, 1);
+    ctx.fillRect(0, ad1Start + ad1Height - 1, width, 1);
 
     // "ANNONS" badge
-    ctx.fillStyle = '#9a3412';
-    ctx.font = 'bold 11px sans-serif';
-    ctx.fillText('SPONSRAT INNEHÅLL • REKLAM', cardX + 30, ad1Start + 30);
+    ctx.fillStyle = '#c2410c';
+    ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('SPONSRAT INNEHÅLL • REKLAM', margin, ad1Start + 32);
 
     // Ad content
     ctx.fillStyle = '#7c2d12';
-    ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillText('⚡ Byt till framtidens elavtal – Spara upp till 4 500 kr!', cardX + 30, ad1Start + 75);
+    ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    drawWrappedText(ctx, '⚡ Byt till framtidens elavtal – Spara upp till 4 500 kr!', margin, ad1Start + 66, contentWidth, 28);
 
     ctx.fillStyle = '#9a3412';
-    ctx.font = '15px sans-serif';
-    ctx.fillText('Ingen bindningstid. 100% fossilfri energi direkt till ditt hem.', cardX + 30, ad1Start + 115);
-    ctx.fillText('Jämför priset på under 60 sekunder och få 1 års rabatt på månadsavgiften.', cardX + 30, ad1Start + 140);
+    ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    drawWrappedText(
+      ctx,
+      'Ingen bindningstid. 100% fossilfri energi direkt till ditt hem. Jämför priset på under 60 sekunder och få 1 års rabatt på månadsavgiften.',
+      margin,
+      ad1Start + 104,
+      contentWidth,
+      22
+    );
 
-    // Fake Ad CTA Button
+    // Ad CTA Button
     ctx.fillStyle = '#ea580c';
     ctx.beginPath();
-    ctx.roundRect(cardX + 30, ad1Start + 180, 220, 48, 8);
+    ctx.roundRect(margin, ad1Start + 165, 210, 44, 7);
     ctx.fill();
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 15px sans-serif';
-    ctx.fillText('Jämför ditt elpris nu →', cardX + 55, ad1Start + 210);
+    ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('Jämför ditt elpris nu →', margin + 26, ad1Start + 192);
 
     ctx.fillStyle = '#c2410c';
-    ctx.font = '11px sans-serif';
-    ctx.fillText('Gäller endast nya kunder via denna kampanj. Energikollen AB.', cardX + 30, ad1Start + 255);
+    ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('Gäller endast nya kunder via denna kampanj. Energikollen AB.', margin, ad1Start + 242);
 
-    y = ad1Start + ad1Height + 35;
+    y = ad1Start + ad1Height + 36;
 
     // Subheading
     ctx.fillStyle = '#0f172a';
-    ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, serif';
-    ctx.fillText('Varför höjdledsklippning förändrar spelplanen', cardX + 30, y);
-    y += 38;
+    ctx.font = 'bold 23px Georgia, Cambria, "Times New Roman", serif';
+    y = drawWrappedText(ctx, 'Varför höjdledsklippning förändrar spelplanen', margin, y, contentWidth, 32);
+    y += 16;
 
     // Body text section 2
-    const text2 = [
-      'Lösningen är förvånansvärt elegant: i stället för att förlita sig på klumpiga ad-blockers som',
-      'ibland förstör artikelns typsättning eller blockerar själva bilderna, kan man i efterhand',
-      'göra ett rent snitt genom skärmdumpen.',
-      '',
-      'Genom att identifiera de vertikala sektioner där annonser och irrelevanta puffar ligger,',
-      'kan verktyget skära bort hela sektionen och foga samman de kvarvarande delarna sömlöst.',
-      'Resultatet blir en ren, tidlös och lättläst sammanställning där ingress, brödtext och',
-      'slutsats hänger ihop precis som en klassisk boktryckt text.',
-    ];
-    text2.forEach((line) => {
-      ctx.fillText(line, cardX + 30, y);
-      y += 26;
-    });
-
-    y += 25;
+    ctx.fillStyle = '#1e293b';
+    ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    y = drawWrappedText(
+      ctx,
+      'Lösningen är förvånansvärt elegant: i stället för att förlita sig på klumpiga ad-blockers som ibland förstör artikelns typsättning eller blockerar själva bilderna, kan man i efterhand göra ett rent snitt genom skärmdumpen.',
+      margin,
+      y,
+      contentWidth,
+      26
+    );
+    y += 12;
+    y = drawWrappedText(
+      ctx,
+      'Genom att identifiera de vertikala sektioner där annonser och irrelevanta puffar ligger, kan verktyget skära bort hela sektionen och foga samman de kvarvarande delarna sömlöst. Resultatet blir en ren, tidlös och lättläst sammanställning där ingress, brödtext och slutsats hänger ihop precis som en klassisk boktryckt text.',
+      margin,
+      y,
+      contentWidth,
+      26
+    );
+    y += 28;
 
     // Blockquote
-    ctx.fillStyle = '#f1f5f9';
-    ctx.fillRect(cardX + 30, y, cardWidth - 60, 95);
+    const quoteH = 96;
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(margin, y, contentWidth, quoteH);
     ctx.fillStyle = '#3b82f6';
-    ctx.fillRect(cardX + 30, y, 6, 95);
+    ctx.fillRect(margin, y, 5, quoteH);
 
     ctx.fillStyle = '#1e293b';
-    ctx.font = 'italic 16px serif';
-    ctx.fillText('”Möjligheten att enkelt klippa bort 300 pixlar reklam mitt i en text och foga samman', cardX + 55, y + 38);
-    ctx.fillText('delarna gör att långa skärmdumpar äntligen blir användbara på riktigt.”', cardX + 55, y + 66);
-    y += 125;
+    ctx.font = 'italic 16px Georgia, serif';
+    drawWrappedText(
+      ctx,
+      '”Möjligheten att enkelt klippa bort 300 pixlar reklam mitt i en text och foga samman delarna gör att långa skärmdumpar äntligen blir användbara på riktigt.”',
+      margin + 20,
+      y + 36,
+      contentWidth - 36,
+      26
+    );
+    y += quoteH + 36;
 
     // ==========================================
-    // AD 2: CASINO / CRYPTO SPONSORED BANNER
+    // AD 2: CASINO / CRYPTO SPONSORED BANNER (Full-width)
     // ==========================================
     const ad2Start = y;
-    const ad2Height = 310;
+    const ad2Height = 295;
 
     // Ad background
     ctx.fillStyle = '#090d16';
-    ctx.fillRect(cardX, ad2Start, cardWidth, ad2Height);
+    ctx.fillRect(0, ad2Start, width, ad2Height);
+
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(0, ad2Start, width, 1);
+    ctx.fillRect(0, ad2Start + ad2Height - 1, width, 1);
 
     ctx.fillStyle = '#fbbf24';
-    ctx.font = 'bold 11px sans-serif';
-    ctx.fillText('ANNONS • SPONSRAT INNEHÅLL', cardX + 30, ad2Start + 32);
+    ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('ANNONS • SPONSRAT INNEHÅLL', margin, ad2Start + 32);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 22px sans-serif';
-    ctx.fillText('🎰 Nordens Största Spelsajt – 100 Free Spins Idag!', cardX + 30, ad2Start + 75);
+    ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    drawWrappedText(ctx, '🎰 Nordens Största Spelsajt – 100 Free Spins Idag!', margin, ad2Start + 66, contentWidth, 28);
 
     ctx.fillStyle = '#cbd5e1';
-    ctx.font = '14px sans-serif';
-    ctx.fillText('Upptäck över 2 000 slots och live casino med blixtsnabba uttag med BankID.', cardX + 30, ad2Start + 115);
-    ctx.fillText('Sätt in 100 kr och spela för 500 kr. Omsättningskrav 20x. Spela ansvarsfullt.', cardX + 30, ad2Start + 140);
+    ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    drawWrappedText(
+      ctx,
+      'Upptäck över 2 000 slots och live casino med blixtsnabba uttag med BankID. Sätt in 100 kr och spela för 500 kr. Omsättningskrav 20x. Spela ansvarsfullt.',
+      margin,
+      ad2Start + 104,
+      contentWidth,
+      22
+    );
 
     // Fake Ad Buttons
     ctx.fillStyle = '#10b981';
     ctx.beginPath();
-    ctx.roundRect(cardX + 30, ad2Start + 175, 200, 46, 6);
+    ctx.roundRect(margin, ad2Start + 170, 195, 44, 6);
     ctx.fill();
 
     ctx.fillStyle = '#064e3b';
-    ctx.font = 'bold 15px sans-serif';
-    ctx.fillText('Hämta bonus här →', cardX + 52, ad2Start + 204);
+    ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('Hämta bonus här →', margin + 24, ad2Start + 198);
 
     ctx.fillStyle = '#64748b';
-    ctx.font = '11px sans-serif';
-    ctx.fillText('18+ • Stödlinjen.se • Spelpaus.se • Regler & villkor gäller.', cardX + 30, ad2Start + 260);
+    ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('18+ • Stödlinjen.se • Spelpaus.se • Regler & villkor gäller.', margin, ad2Start + 252);
 
-    y = ad2Start + ad2Height + 40;
+    y = ad2Start + ad2Height + 36;
 
     // Section 3
     ctx.fillStyle = '#0f172a';
-    ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, serif';
-    ctx.fillText('Steg-för-steg: Så skapar du den perfekta läsfilen', cardX + 30, y);
-    y += 38;
+    ctx.font = 'bold 23px Georgia, Cambria, "Times New Roman", serif';
+    y = drawWrappedText(ctx, 'Steg-för-steg: Så skapar du den perfekta läsfilen', margin, y, contentWidth, 32);
+    y += 18;
 
-    const text3 = [
+    ctx.fillStyle = '#1e293b';
+    ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    const steps = [
       '1. Ta en skrollande skärmdump på din telefon eller dator av hela webbsidan.',
       '2. Släpp in bilden i redigeraren eller klistra in direkt från urklipp.',
       '3. Dra markeringar över de sektioner i höjdled som du vill ta bort.',
       '4. Kontrollera förhandsgranskningen – sektionerna fogas samman millimeter-exakt.',
-      '5. Ladda ner den rena artikeln eller kopiera bilden direkt till anteckningar.',
+      '5. Ladda ner den rena artikeln eller kopiera bilden direkt till dina anteckningar.',
     ];
-    text3.forEach((line) => {
-      ctx.fillText(line, cardX + 30, y);
-      y += 32;
+    steps.forEach((step) => {
+      y = drawWrappedText(ctx, step, margin, y, contentWidth, 26);
+      y += 8;
     });
 
-    y += 30;
+    y += 24;
 
     // ==========================================
-    // AD 3: NEWSLETTER POPUP / BANNER
+    // AD 3: NEWSLETTER POPUP / BANNER (Full-width)
     // ==========================================
     const ad3Start = y;
     const ad3Height = 220;
 
     ctx.fillStyle = '#eff6ff';
-    ctx.fillRect(cardX, ad3Start, cardWidth, ad3Height);
-    ctx.strokeStyle = '#bfdbfe';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(cardX, ad3Start, cardWidth, ad3Height);
+    ctx.fillRect(0, ad3Start, width, ad3Height);
+    ctx.fillStyle = '#bfdbfe';
+    ctx.fillRect(0, ad3Start, width, 1);
+    ctx.fillRect(0, ad3Start + ad3Height - 1, width, 1);
 
     ctx.fillStyle = '#1d4ed8';
-    ctx.font = 'bold 11px sans-serif';
-    ctx.fillText('NYHETSBREV & ERBJUDANDEN', cardX + 30, ad3Start + 32);
+    ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('NYHETSBREV & ERBJUDANDEN', margin, ad3Start + 32);
 
     ctx.fillStyle = '#1e3a8a';
-    ctx.font = 'bold 20px sans-serif';
-    ctx.fillText('📩 Vill du ha fler sammanfattningar utan annonser?', cardX + 30, ad3Start + 68);
+    ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    drawWrappedText(ctx, '📩 Vill du ha fler sammanfattningar utan annonser?', margin, ad3Start + 66, contentWidth, 26);
 
     ctx.fillStyle = '#475569';
-    ctx.font = '14px sans-serif';
-    ctx.fillText('Skriv in din e-postadress så skickar vi vår veckovisa kurering av de viktigaste tech-nyheterna.', cardX + 30, ad3Start + 102);
+    ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    drawWrappedText(
+      ctx,
+      'Skriv in din e-postadress så skickar vi vår veckovisa kurering av de viktigaste tech-nyheterna.',
+      margin,
+      ad3Start + 100,
+      contentWidth,
+      22
+    );
 
     // Input box simulation
+    const inputW = Math.min(300, contentWidth - 150);
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(cardX + 30, ad3Start + 130, 320, 42);
+    ctx.fillRect(margin, ad3Start + 132, inputW, 42);
     ctx.strokeStyle = '#cbd5e1';
-    ctx.strokeRect(cardX + 30, ad3Start + 130, 320, 42);
+    ctx.lineWidth = 1;
+    ctx.strokeRect(margin, ad3Start + 132, inputW, 42);
     ctx.fillStyle = '#94a3b8';
-    ctx.font = '14px sans-serif';
-    ctx.fillText('din.epost@foretag.se', cardX + 45, ad3Start + 156);
+    ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('din.epost@foretag.se', margin + 14, ad3Start + 158);
 
+    const btnX = margin + inputW + 12;
     ctx.fillStyle = '#2563eb';
     ctx.beginPath();
-    ctx.roundRect(cardX + 365, ad3Start + 130, 140, 42, 6);
+    ctx.roundRect(btnX, ad3Start + 132, 130, 42, 6);
     ctx.fill();
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 14px sans-serif';
-    ctx.fillText('Prenumerera', cardX + 392, ad3Start + 156);
+    ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('Prenumerera', btnX + 18, ad3Start + 158);
 
-    y = ad3Start + ad3Height + 40;
+    y = ad3Start + ad3Height + 36;
 
     // Conclusion paragraph
     ctx.fillStyle = '#1e293b';
-    ctx.font = '16px -apple-system, BlinkMacSystemFont, sans-serif';
-    const text4 = [
-      'Slutresultatet är en artikel som går att arkivera, skriva ut eller läsa utan distraktioner.',
-      'Att kunna trimma bort reklam vertikalt ger läsaren full kontroll över innehållet.',
-    ];
-    text4.forEach((line) => {
-      ctx.fillText(line, cardX + 30, y);
-      y += 28;
-    });
+    ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    y = drawWrappedText(
+      ctx,
+      'Slutresultatet är en artikel som går att arkivera, skriva ut eller läsa utan distraktioner. Att kunna trimma bort reklam vertikalt ger läsaren full kontroll över innehållet.',
+      margin,
+      y,
+      contentWidth,
+      26
+    );
+    y += 36;
 
-    // Footer
-    ctx.fillStyle = '#f1f5f9';
-    ctx.fillRect(0, height - 90, width, 90);
+    // Footer (Full-width)
+    const footerStart = y;
+    const footerH = 80;
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, footerStart, width, footerH);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillRect(0, footerStart, width, 1);
+
     ctx.fillStyle = '#64748b';
-    ctx.font = '13px sans-serif';
-    ctx.fillText('© 2026 Nordisk Teknik & Framtid • Alla rättigheter förbehållna • Integritetspolicy', cardX + 30, height - 42);
+    ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('© 2026 Nordisk Teknik & Framtid • Alla rättigheter förbehållna • Integritetspolicy', margin, footerStart + 46);
 
-    const dataUrl = canvas.toDataURL('image/png');
+    y = footerStart + footerH;
+
+    // Crop to exact computed height
+    const finalHeight = Math.ceil(y);
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = width;
+    finalCanvas.height = finalHeight;
+    const finalCtx = finalCanvas.getContext('2d')!;
+    finalCtx.drawImage(canvas, 0, 0, width, finalHeight, 0, 0, width, finalHeight);
+
+    const dataUrl = finalCanvas.toDataURL('image/png');
 
     const suggestedCuts: CutZone[] = [
       {
@@ -496,7 +593,7 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
     resolve({
       dataUrl,
       width,
-      height,
+      height: finalHeight,
       suggestedCuts,
     });
   });
