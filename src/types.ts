@@ -29,5 +29,3 @@ export interface StitchOptions {
   seamColor?: string;
 }
 
-export type DetectionSensitivity = 'conservative' | 'balanced' | 'aggressive';
-

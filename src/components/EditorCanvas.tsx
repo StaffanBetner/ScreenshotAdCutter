@@ -12,7 +12,6 @@ import {
   Move,
   ChevronUp,
   ChevronDown,
-  Sparkles,
   Check,
   ArrowUpDown,
 } from 'lucide-react';
@@ -258,18 +257,12 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
         // Dragged a substantial box: create it directly
         onAddCutZone(start, end);
       } else {
-        // Tap-to-Cut: user tapped directly on an ad or whitespace without dragging!
-        // Places an intuitive 140px cut zone centered around the tap location
-        const tapY = dragMode.startY;
-        const defaultHeight = Math.min(220, Math.max(90, Math.round(imageInfo.height * 0.12)));
-        const half = Math.round(defaultHeight / 2);
-        const tapStart = Math.max(0, tapY - half);
-        const tapEnd = Math.min(imageInfo.height, tapStart + defaultHeight);
-        onAddCutZone(tapStart, tapEnd);
+        // Simple tap or click without dragging: just deselect any active zone
+        onSelectZone(null);
       }
     }
     setDragMode(null);
-  }, [dragMode, onAddCutZone, imageInfo.height]);
+  }, [dragMode, onAddCutZone, onSelectZone]);
 
   // Window listeners for pointer move and up (supports both mouse and mobile touch)
   useEffect(() => {
@@ -351,11 +344,8 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
         <div className="flex items-center gap-2 sm:gap-3 text-xs text-slate-600">
           <div className="flex items-center gap-1.5 text-indigo-600 font-medium">
             <Scissors className="w-4 h-4 shrink-0" />
-            <span className="hidden sm:inline">Klicka & dra eller tryck på annons för att klippa</span>
-            <span className="sm:hidden font-semibold flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-amber-500" />
-              Tryck på annons för att klippa
-            </span>
+            <span className="hidden sm:inline">Klicka och dra över bildytan för att markera en klippzon</span>
+            <span className="sm:hidden font-semibold">Dra för att markera klippzon</span>
           </div>
           <span className="text-slate-300 hidden sm:inline">|</span>
           <span className="text-slate-500 hidden sm:inline">

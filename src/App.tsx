@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { CutZone, ImageInfo, ViewMode, DetectionSensitivity } from './types';
+import { CutZone, ImageInfo, ViewMode } from './types';
 import { Header } from './components/Header';
 import { EditorCanvas } from './components/EditorCanvas';
 import { CutZonesSidebar } from './components/CutZonesSidebar';
@@ -8,9 +8,8 @@ import { CleanPreview } from './components/CleanPreview';
 import { SplitComparison } from './components/SplitComparison';
 import { EmptyDropzone } from './components/EmptyDropzone';
 import { generateSampleArticle, stitchImage } from './utils/stitcher';
-import { detectCandidateAdZones } from './utils/detector';
 import { clearStitchCache, getCachedStitch } from './utils/stitchCache';
-import { Check, Info, Plus, Sliders, Sparkles, X, Eye } from 'lucide-react';
+import { Check, Info, Plus, Sliders, X, Eye } from 'lucide-react';
 
 export default function App() {
   const [imageInfo, setImageInfo] = useState<ImageInfo | null>(null);
@@ -24,8 +23,6 @@ export default function App() {
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
 
   const [isCopied, setIsCopied] = useState<boolean>(false);
-  const [isScanning, setIsScanning] = useState<boolean>(false);
-  const [detectionSensitivity, setDetectionSensitivity] = useState<DetectionSensitivity>('conservative');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -119,8 +116,8 @@ export default function App() {
   // Load realistic sample article with 3 ads
   const handleLoadSample = async () => {
     const sample = await generateSampleArticle();
-    loadImage(sample.dataUrl, sample.suggestedCuts, 'exempel-artikel-med-reklam.png');
-    showToast('Laddade exempelartikel med 3 markerade annonssektioner!');
+    loadImage(sample.dataUrl, [], 'exempel-artikel.png');
+    showToast('Exempelartikel laddad – markera över annonserna för att klippa!');
   };
 
   // Add cut zone
@@ -129,7 +126,7 @@ export default function App() {
       id: `cut-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       startY: Math.min(startY, endY),
       endY: Math.max(startY, endY),
-      label: label || `Reklamsektion (${Math.abs(endY - startY)} px)`,
+      label: label || `Klippzon (${Math.abs(endY - startY)} px)`,
       enabled: true,
     };
     const updated = [...cutZones, newZone].sort((a, b) => a.startY - b.startY);
@@ -143,7 +140,7 @@ export default function App() {
     const midY = Math.round(imageInfo.height / 2);
     const startY = Math.max(0, midY - 120);
     const endY = Math.min(imageInfo.height, midY + 120);
-    handleAddCutZone(startY, endY, 'Manuell reklamsektion');
+    handleAddCutZone(startY, endY, 'Manuell klippzon');
   };
 
   const handleDeleteCutZone = (id: string) => {
@@ -164,24 +161,6 @@ export default function App() {
       setActiveZoneId(null);
       showToast('Alla klippzoner rensades');
     }
-  };
-
-  // Auto-detection of ad blocks
-  const handleAutoDetect = (overrideSensitivity?: DetectionSensitivity) => {
-    if (!imageInfo?.element) return;
-    const sens = overrideSensitivity || detectionSensitivity;
-    setIsScanning(true);
-    setTimeout(() => {
-      const candidates = detectCandidateAdZones(imageInfo.element!, cutZones, { sensitivity: sens });
-      setIsScanning(false);
-      if (candidates.length > 0) {
-        const merged = [...cutZones, ...candidates].sort((a, b) => a.startY - b.startY);
-        handleCutZonesChange(merged);
-        showToast(`Hittade ${candidates.length} annonssektioner (artikeltext exkluderades)!`);
-      } else {
-        showToast('Inga nya tydliga annonser hittades (artikeltext skyddades).');
-      }
-    }, 350);
   };
 
   // Scroll to a specific cut zone in the editor (supports top or bottom edge)
@@ -362,17 +341,13 @@ export default function App() {
                     cutZones={cutZones}
                     onCutZonesChange={handleCutZonesChange}
                     onAddManualCut={handleAddManualCut}
-                    onAutoDetect={handleAutoDetect}
                     onDeleteZone={handleDeleteCutZone}
                     onToggleZone={handleToggleCutZone}
                     activeZoneId={activeZoneId}
                     onSelectZone={setActiveZoneId}
                     onScrollToZone={handleScrollToZone}
-                    isScanning={isScanning}
                     canUndo={historyIndex > 0}
                     onUndo={handleUndo}
-                    sensitivity={detectionSensitivity}
-                    onSensitivityChange={setDetectionSensitivity}
                   />
                 </div>
               </div>
@@ -382,36 +357,25 @@ export default function App() {
             {viewMode === 'editor' && (
               <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-2 flex items-center justify-between gap-2 shadow-lg">
                 <button
-                  id="mobile-auto-detect-btn"
-                  onClick={() => handleAutoDetect(detectionSensitivity)}
-                  disabled={isScanning}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 bg-indigo-600 active:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50 transition"
-                  title="Skanna artikeln efter reklam automatiskt"
-                >
-                  <Sparkles className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : 'text-amber-300'}`} />
-                  <span>Auto-hitta</span>
-                </button>
-
-                <button
                   id="mobile-add-cut-btn"
                   onClick={handleAddManualCut}
-                  className="flex items-center justify-center gap-1 py-2 px-3 bg-slate-100 active:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 bg-indigo-600 active:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition"
                   title="Lägg till en ny klippzon manuellt"
                 >
-                  <Plus className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>+ Klipp</span>
+                  <Plus className="w-4 h-4" />
+                  <span>+ Klippzon</span>
                 </button>
 
                 <button
                   id="mobile-zones-drawer-btn"
                   onClick={() => setIsMobileDrawerOpen(true)}
-                  className="flex items-center justify-center gap-1.5 py-2 px-3 bg-slate-100 active:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold relative transition"
-                  title="Öppna lista över alla klippzoner och inställningar"
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-slate-100 active:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold relative transition"
+                  title="Öppna lista över alla klippzoner"
                 >
-                  <Sliders className="w-3.5 h-3.5 text-slate-600" />
+                  <Sliders className="w-4 h-4 text-slate-600" />
                   <span>Zoner</span>
                   {cutZones.filter((z) => z.enabled).length > 0 && (
-                    <span className="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full">
+                    <span className="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                       {cutZones.filter((z) => z.enabled).length}
                     </span>
                   )}
@@ -420,10 +384,10 @@ export default function App() {
                 <button
                   id="mobile-preview-btn"
                   onClick={() => setViewMode('preview')}
-                  className="flex items-center justify-center gap-1 py-2 px-3 bg-emerald-50 active:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold border border-emerald-200/60 transition"
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-emerald-50 active:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold border border-emerald-200/60 transition"
                   title="Se den färdiga rena bilden"
                 >
-                  <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                  <Eye className="w-4 h-4 text-emerald-600" />
                   <span>Ren bild</span>
                 </button>
               </div>
@@ -440,7 +404,7 @@ export default function App() {
                   <div className="p-3 border-b border-slate-200 flex items-center justify-between bg-slate-50 rounded-t-2xl">
                     <div className="flex items-center gap-2">
                       <Sliders className="w-4 h-4 text-indigo-600" />
-                      <h3 className="text-sm font-bold text-slate-900">Klippsektioner & Inställningar</h3>
+                      <h3 className="text-sm font-bold text-slate-900">Klippsektioner</h3>
                     </div>
                     <button
                       onClick={() => setIsMobileDrawerOpen(false)}
@@ -455,7 +419,6 @@ export default function App() {
                       cutZones={cutZones}
                       onCutZonesChange={handleCutZonesChange}
                       onAddManualCut={handleAddManualCut}
-                      onAutoDetect={handleAutoDetect}
                       onDeleteZone={handleDeleteCutZone}
                       onToggleZone={handleToggleCutZone}
                       activeZoneId={activeZoneId}
@@ -467,11 +430,8 @@ export default function App() {
                         handleScrollToZone(zone);
                         setIsMobileDrawerOpen(false);
                       }}
-                      isScanning={isScanning}
                       canUndo={historyIndex > 0}
                       onUndo={handleUndo}
-                      sensitivity={detectionSensitivity}
-                      onSensitivityChange={setDetectionSensitivity}
                     />
                   </div>
                 </div>

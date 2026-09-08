@@ -5,30 +5,24 @@ import {
   Trash2,
   Eye,
   EyeOff,
-  Sparkles,
-  ArrowDownToLine,
   Sliders,
   ChevronRight,
-  ShieldCheck
+  ShieldCheck,
 } from 'lucide-react';
-import { CutZone, ImageInfo, DetectionSensitivity } from '../types';
+import { CutZone, ImageInfo } from '../types';
 
 interface CutZonesSidebarProps {
   imageInfo: ImageInfo;
   cutZones: CutZone[];
   onCutZonesChange: (zones: CutZone[]) => void;
   onAddManualCut: () => void;
-  onAutoDetect: (sensitivity?: DetectionSensitivity) => void;
   onDeleteZone: (id: string) => void;
   onToggleZone: (id: string) => void;
   activeZoneId: string | null;
   onSelectZone: (id: string | null) => void;
   onScrollToZone: (zone: CutZone, edge?: 'top' | 'bottom') => void;
-  isScanning: boolean;
   canUndo?: boolean;
   onUndo?: () => void;
-  sensitivity?: DetectionSensitivity;
-  onSensitivityChange?: (s: DetectionSensitivity) => void;
 }
 
 export const CutZonesSidebar: React.FC<CutZonesSidebarProps> = ({
@@ -36,17 +30,13 @@ export const CutZonesSidebar: React.FC<CutZonesSidebarProps> = ({
   cutZones,
   onCutZonesChange,
   onAddManualCut,
-  onAutoDetect,
   onDeleteZone,
   onToggleZone,
   activeZoneId,
   onSelectZone,
   onScrollToZone,
-  isScanning,
   canUndo,
   onUndo,
-  sensitivity = 'conservative',
-  onSensitivityChange,
 }) => {
   // Stats
   const activeCuts = cutZones.filter((z) => z.enabled);
@@ -127,79 +117,16 @@ export const CutZonesSidebar: React.FC<CutZonesSidebarProps> = ({
           </div>
         </div>
 
-        {/* Action buttons: Auto detect & manual add */}
-        <div className="space-y-2 pt-1">
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              id="auto-detect-btn"
-              onClick={() => onAutoDetect(sensitivity)}
-              disabled={isScanning}
-              className="flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition disabled:opacity-50 shadow-xs"
-              title="Skannar efter reklam och sparar artikeltext"
-            >
-              <Sparkles className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : 'text-amber-300'}`} />
-              <span>{isScanning ? 'Skannar...' : 'Hitta reklam'}</span>
-            </button>
-
-            <button
-              id="add-cut-zone-btn"
-              onClick={onAddManualCut}
-              className="flex items-center justify-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-medium border border-slate-200 hover:border-slate-300 shadow-xs transition"
-            >
-              <Plus className="w-3.5 h-3.5 text-indigo-600" />
-              <span>+ Klippzon</span>
-            </button>
-          </div>
-
-          {/* Text Protection & Sensitivity Mode */}
-          <div className="bg-slate-50 p-2 rounded-lg border border-slate-200 flex flex-col gap-1.5">
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="flex items-center gap-1 text-emerald-700 font-medium">
-                <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                <span>Textskydd</span>
-              </span>
-              <span className="text-[10px] text-slate-500">Exkluderar artikeltext</span>
-            </div>
-
-            <div className="grid grid-cols-3 gap-1 text-[10px]">
-              <button
-                type="button"
-                onClick={() => onSensitivityChange && onSensitivityChange('conservative')}
-                className={`px-1.5 py-1 rounded font-medium transition text-center ${
-                  sensitivity === 'conservative'
-                    ? 'bg-white text-indigo-700 shadow-2xs font-semibold border border-indigo-200'
-                    : 'text-slate-600 hover:bg-white/60'
-                }`}
-                title="Striktast: Endast tydliga banners & färgad reklam, rör aldrig text"
-              >
-                Strikt
-              </button>
-              <button
-                type="button"
-                onClick={() => onSensitivityChange && onSensitivityChange('balanced')}
-                className={`px-1.5 py-1 rounded font-medium transition text-center ${
-                  sensitivity === 'balanced'
-                    ? 'bg-white text-indigo-700 shadow-2xs font-semibold border border-indigo-200'
-                    : 'text-slate-600 hover:bg-white/60'
-                }`}
-                title="Balanserat: Fångar banners, containers och media"
-              >
-                Normal
-              </button>
-              <button
-                type="button"
-                onClick={() => onSensitivityChange && onSensitivityChange('aggressive')}
-                className={`px-1.5 py-1 rounded font-medium transition text-center ${
-                  sensitivity === 'aggressive'
-                    ? 'bg-white text-indigo-700 shadow-2xs font-semibold border border-indigo-200'
-                    : 'text-slate-600 hover:bg-white/60'
-                }`}
-                title="Känslig: Fångar även mindre moduler och grå rutor"
-              >
-                Känslig
-              </button>
-            </div>
-          </div>
+        {/* Action button: Manual add */}
+        <div className="pt-1">
+          <button
+            id="add-cut-zone-btn"
+            onClick={onAddManualCut}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl text-xs font-semibold shadow-xs transition"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Lägg till klippzon</span>
+          </button>
         </div>
       </div>
 
@@ -213,7 +140,7 @@ export const CutZonesSidebar: React.FC<CutZonesSidebarProps> = ({
             <div className="space-y-1">
               <p className="text-xs font-medium text-slate-600">Inga klippzoner ännu</p>
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                Dra med musen över reklamsektioner på skärmdumpen eller klicka på ”Hitta reklam”.
+                Klicka och dra över bildytan för att markera sektioner som ska klippas bort.
               </p>
             </div>
           </div>
