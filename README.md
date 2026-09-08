@@ -4,6 +4,8 @@ Klipp smidigt bort reklam och oönskade sektioner i höjdled från långa skärm
 
 Perfekt när du vill arkivera en lång artikel som skärmdump utan att banners, nyhetsbrevspuffar och sponsrat innehåll tar upp halva bilden.
 
+🌐 **Live demo:** [https://staffanbetner.github.io/ScreenshotAdCutter/](https://staffanbetner.github.io/ScreenshotAdCutter/)
+
 ## Funktioner
 
 - **Dra-och-släpp / klistra in** – ladda en skärmdump via filväljare, drag & drop eller klistra in direkt från urklipp (`Ctrl+V` var som helst i appen).
