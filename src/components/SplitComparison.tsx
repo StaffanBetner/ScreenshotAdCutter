@@ -15,17 +15,20 @@ import {
 import { CutZone, ImageInfo, StitchOptions } from '../types';
 import { normalizeCutZones, calculateSegments } from '../utils/stitcher';
 import { getCachedStitch, getOrGenerateStitchedImage } from '../utils/stitchCache';
+import { Translations } from '../i18n';
 
 interface SplitComparisonProps {
   imageInfo: ImageInfo;
   cutZones: CutZone[];
   onBackToEditor: () => void;
+  t: Translations;
 }
 
 export const SplitComparison: React.FC<SplitComparisonProps> = ({
   imageInfo,
   cutZones,
   onBackToEditor,
+  t,
 }) => {
   // Check if a stitched result is already cached (e.g. from Clean Preview or prior visit)
   const initialCached = imageInfo.element
@@ -187,9 +190,9 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
                   ? 'bg-white text-indigo-700 shadow-xs font-semibold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
-              title="Visa i 100% full originalupplösning"
+              title={t.sharpOriginalBadge}
             >
-              <span>100% Skarp</span>
+              <span>100%</span>
             </button>
             <button
               id="split-mode-fit-btn"
@@ -199,9 +202,9 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
                   ? 'bg-white text-indigo-700 shadow-xs font-semibold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
-              title="Anpassa kolumnbredd"
+              title={t.zoomFitWidth}
             >
-              <span>Anpassa</span>
+              <span>{t.zoomFitWidth}</span>
             </button>
           </div>
 
@@ -209,21 +212,21 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
             <button
               id="split-zoom-out-btn"
               onClick={() => handleZoom(-0.1)}
-              title="Zooma ut"
+              title={t.zoomOut}
               className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded transition"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
             <span
               className="px-1.5 sm:px-2 py-0.5 text-[11px] font-mono text-slate-700 rounded font-medium min-w-[34px] sm:min-w-[38px] text-center select-none"
-              title="Aktuell visningsskala"
+              title={t.zoom100}
             >
               {Math.round(scale * 100)}%
             </span>
             <button
               id="split-zoom-in-btn"
               onClick={() => handleZoom(0.1)}
-              title="Zooma in"
+              title={t.zoomIn}
               className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded transition"
             >
               <ZoomIn className="w-3.5 h-3.5" />
@@ -237,19 +240,19 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
             onClick={() => setMobileView('both')}
             className={`px-2 py-1 rounded-md transition ${mobileView === 'both' ? 'bg-white text-indigo-700 font-semibold shadow-2xs' : 'text-slate-600'}`}
           >
-            Båda
+            {t.bothViewsBtn}
           </button>
           <button
             onClick={() => setMobileView('clean')}
             className={`px-2 py-1 rounded-md transition ${mobileView === 'clean' ? 'bg-white text-emerald-700 font-semibold shadow-2xs' : 'text-slate-600'}`}
           >
-            Ren bild
+            {t.cleanViewBtn}
           </button>
           <button
             onClick={() => setMobileView('original')}
             className={`px-2 py-1 rounded-md transition ${mobileView === 'original' ? 'bg-white text-rose-700 font-semibold shadow-2xs' : 'text-slate-600'}`}
           >
-            Original
+            {t.originalViewBtn}
           </button>
         </div>
 
@@ -263,7 +266,7 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
               onChange={(e) => setShowSeams(e.target.checked)}
               className="rounded border-slate-300 text-indigo-600 focus:ring-0 focus:ring-offset-0"
             />
-            <span>Markera skarvar</span>
+            <span>{t.seamMarkersLabel}</span>
           </label>
 
           {/* Sync scroll toggle */}
@@ -274,7 +277,7 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
               onChange={(e) => setSyncScroll(e.target.checked)}
               className="rounded border-slate-300 text-indigo-600 focus:ring-0 focus:ring-offset-0"
             />
-            <span>Synka skroll</span>
+            <span>{t.syncScrollLabel}</span>
           </label>
 
           <button
@@ -282,7 +285,7 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
             onClick={onBackToEditor}
             className="px-2.5 sm:px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition shadow-xs flex items-center gap-1"
           >
-            <span>Justera klipp</span>
+            <span>{t.adjustCutsBtn}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -296,10 +299,10 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
             <div className="bg-white px-3 sm:px-4 py-2 text-xs font-semibold text-rose-700 flex items-center justify-between border-b border-slate-200 shadow-2xs shrink-0">
               <div className="flex items-center gap-1.5 truncate">
                 <Scissors className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                <span className="truncate">Originalartikel ({imageInfo.height} px)</span>
+                <span className="truncate">{t.compareOriginalColTitle(imageInfo.height)}</span>
               </div>
               <span className="text-[10px] text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 font-mono font-medium shrink-0 ml-1">
-                {normalizedCuts.length} klipp
+                {t.cutsCountBadge(normalizedCuts.length)}
               </span>
             </div>
 
@@ -318,7 +321,7 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
               >
                 <img
                   src={imageInfo.url}
-                  alt="Original artikel"
+                  alt={t.originalAlt}
                   className="w-full h-auto block pointer-events-none select-none"
                   style={{ imageRendering: 'auto' }}
                   draggable={false}
@@ -349,7 +352,7 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
                         top: `${topPx}px`,
                         height: `${heightPx}px`,
                       }}
-                      title={`${cut.label || 'Reklamsektion'}: ${cutHeight} px`}
+                      title={`${cut.label || 'Ad'}: ${cutHeight} px`}
                     >
                       {/* Badge placed neatly inside or at top */}
                       <div
@@ -360,7 +363,7 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
                         }`}
                       >
                         <Scissors className="w-2.5 h-2.5" />
-                        <span className="font-semibold">Klipps bort:</span>
+                        <span className="font-semibold">{t.cutOutLabel}</span>
                         <span>{cut.label || `${cutHeight} px`}</span>
                         {!isCompact && (
                           <span className="opacity-80 font-mono text-[9px]">
@@ -383,10 +386,10 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
             <div className="bg-white px-3 sm:px-4 py-2 text-xs font-semibold text-emerald-700 flex items-center justify-between border-b border-slate-200 shadow-2xs shrink-0">
               <div className="flex items-center gap-1.5 truncate">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span className="truncate">Sammanfogat resultat ({cleanHeight} px)</span>
+                <span className="truncate">{t.compareCleanColTitle(cleanHeight)}</span>
               </div>
               <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-mono font-medium shrink-0 ml-1">
-                100% ren text
+                {t.cleanTextBadge}
               </span>
             </div>
 
@@ -406,7 +409,7 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
                   >
                     <img
                       src={cleanUrl}
-                      alt="Ren sammansatt artikel"
+                      alt={t.cleanAlt}
                       className="w-full h-auto block select-none"
                       style={{ imageRendering: 'auto' }}
                       draggable={false}
@@ -415,7 +418,7 @@ export const SplitComparison: React.FC<SplitComparisonProps> = ({
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-64 text-slate-400 text-xs">
-                  Genererar ren bild...
+                  {t.generatingCleanImage}
                 </div>
               )}
             </div>

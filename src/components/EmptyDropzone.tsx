@@ -1,14 +1,17 @@
 import React, { useState, useRef } from 'react';
-import { Upload, Sparkles, Image as ImageIcon, Scissors, ShieldCheck, ArrowRight, Clipboard } from 'lucide-react';
+import { Upload, Sparkles, Scissors, ArrowRight, Clipboard, ShieldCheck } from 'lucide-react';
+import { Translations } from '../i18n';
 
 interface EmptyDropzoneProps {
   onFileSelect: (file: File) => void;
   onLoadSample: () => void;
+  t: Translations;
 }
 
 export const EmptyDropzone: React.FC<EmptyDropzoneProps> = ({
   onFileSelect,
   onLoadSample,
+  t,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -44,16 +47,21 @@ export const EmptyDropzone: React.FC<EmptyDropzoneProps> = ({
       <div className="max-w-2xl w-full space-y-8 my-auto py-8">
         {/* Hero Title */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200/80 text-indigo-700 text-xs font-semibold">
-            <Scissors className="w-3.5 h-3.5" />
-            <span>Klipp & sammanfoga vertikala skärmdumpar</span>
+          <div className="inline-flex flex-wrap items-center justify-center gap-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200/80 text-indigo-700 text-xs font-semibold">
+              <Scissors className="w-3.5 h-3.5" />
+              <span>{t.dropzonePill}</span>
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>{t.privacyBadge}</span>
+            </div>
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Klipp bort reklam från artiklar
+            {t.dropzoneHeadline}
           </h2>
           <p className="text-slate-600 text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
-            Har du tagit en lång skärmdump med irriterande banners och sponsrat innehåll mitt i texten?
-            Markera reklamsektionerna i höjdled och foga samman resten till en ren, sömlös läsbild.
+            {t.dropzoneLead}
           </p>
         </div>
 
@@ -84,17 +92,29 @@ export const EmptyDropzone: React.FC<EmptyDropzoneProps> = ({
 
           <div className="space-y-1">
             <p className="text-base font-semibold text-slate-800">
-              Släpp din skärmdump här eller <span className="text-indigo-600 underline">bläddra</span>
+              {t.dropzoneDragText} <span className="text-indigo-600 underline">{t.dropzoneBrowse}</span>
             </p>
             <p className="text-xs text-slate-500">
-              Stöder PNG, JPEG, WebP (alla bildformat)
+              {t.dropzoneSupported}
             </p>
           </div>
 
           <div className="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200">
             <Clipboard className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Tips: Du kan också klistra in direkt med <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-700 font-mono text-[10px] shadow-2xs">Ctrl + V</kbd></span>
+            <span>{t.dropzonePasteTip} <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-700 font-mono text-[10px] shadow-2xs">Ctrl + V</kbd></span>
           </div>
+        </div>
+
+        {/* Privacy Note Banner */}
+        <div
+          id="privacy-assurance-banner"
+          className="flex items-center justify-center gap-2 text-xs bg-emerald-50/80 border border-emerald-200/80 rounded-xl px-4 py-2.5 text-emerald-900 shadow-2xs"
+        >
+          <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+          <p className="text-center sm:text-left leading-relaxed">
+            <span className="font-semibold">{t.privacyBadge}:</span>{' '}
+            <span className="text-emerald-800">{t.privacyNotice}</span>
+          </p>
         </div>
 
         {/* Sample Article Quick Start Card */}
@@ -104,9 +124,9 @@ export const EmptyDropzone: React.FC<EmptyDropzoneProps> = ({
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-slate-900">Har du ingen skärmdump redo?</h3>
+              <h3 className="text-sm font-semibold text-slate-900">{t.sampleCardTitle}</h3>
               <p className="text-xs text-slate-600">
-                Testa direkt med en realistisk nyhetsartikel som innehåller 3 typiska reklamavbrott.
+                {t.sampleCardDesc}
               </p>
             </div>
           </div>
@@ -116,7 +136,7 @@ export const EmptyDropzone: React.FC<EmptyDropzoneProps> = ({
             onClick={onLoadSample}
             className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition"
           >
-            <span>Testa exempelartikel</span>
+            <span>{t.testSampleArticleBtn}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -124,26 +144,26 @@ export const EmptyDropzone: React.FC<EmptyDropzoneProps> = ({
         {/* 3 Step Process */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-200">
           <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs space-y-1.5">
-            <div className="text-indigo-600 font-bold text-xs">1. Ladda upp</div>
-            <p className="text-xs text-slate-800 font-medium">Lång skärmdump</p>
+            <div className="text-indigo-600 font-bold text-xs">{t.step1Title}</div>
+            <p className="text-xs text-slate-800 font-medium">{t.step1Sub}</p>
             <p className="text-[11px] text-slate-500 leading-relaxed">
-              Lägg till skärmdumpen från mobilen eller datorn.
+              {t.step1Desc}
             </p>
           </div>
 
           <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs space-y-1.5">
-            <div className="text-rose-600 font-bold text-xs">2. Markera</div>
-            <p className="text-xs text-slate-800 font-medium">Klipp bort reklam</p>
+            <div className="text-rose-600 font-bold text-xs">{t.step2Title}</div>
+            <p className="text-xs text-slate-800 font-medium">{t.step2Sub}</p>
             <p className="text-[11px] text-slate-500 leading-relaxed">
-              Dra över de banners och annonser i höjdled du vill ta bort.
+              {t.step2Desc}
             </p>
           </div>
 
           <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs space-y-1.5">
-            <div className="text-emerald-600 font-bold text-xs">3. Sammanfoga</div>
-            <p className="text-xs text-slate-800 font-medium">Sömlöst resultat</p>
+            <div className="text-emerald-600 font-bold text-xs">{t.step3Title}</div>
+            <p className="text-xs text-slate-800 font-medium">{t.step3Sub}</p>
             <p className="text-[11px] text-slate-500 leading-relaxed">
-              Få en ren sammanfogad artikelbild redo att sparas eller delas.
+              {t.step3Desc}
             </p>
           </div>
         </div>
@@ -151,3 +171,4 @@ export const EmptyDropzone: React.FC<EmptyDropzoneProps> = ({
     </div>
   );
 };
+

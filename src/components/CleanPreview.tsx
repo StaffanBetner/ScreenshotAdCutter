@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { CutZone, ImageInfo, StitchOptions } from '../types';
 import { getCachedStitch, getOrGenerateStitchedImage } from '../utils/stitchCache';
+import { Translations } from '../i18n';
 
 interface CleanPreviewProps {
   imageInfo: ImageInfo;
@@ -22,6 +23,7 @@ interface CleanPreviewProps {
   onBackToEditor: () => void;
   onCopyClipboard: () => void;
   isCopied: boolean;
+  t: Translations;
 }
 
 export const CleanPreview: React.FC<CleanPreviewProps> = ({
@@ -30,6 +32,7 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
   onBackToEditor,
   onCopyClipboard,
   isCopied,
+  t,
 }) => {
   // Check if a stitched result is already cached (e.g. from Compare mode or previous visit)
   const initialCached = imageInfo.element
@@ -206,7 +209,7 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
         <div className="flex items-center gap-3 text-xs">
           <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-1.5 rounded-xl">
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span className="font-semibold text-slate-900">Ren skärmdump</span>
+            <span className="font-semibold text-slate-900">{t.cleanScreenshotBadge}</span>
             <span className="text-emerald-700 font-mono font-medium">
               ({imageInfo.width} × {stats.newHeight} px)
             </span>
@@ -215,10 +218,10 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
           <div className="hidden lg:flex items-center gap-3 text-slate-600">
             <span className="text-rose-600 font-medium flex items-center gap-1">
               <Scissors className="w-3.5 h-3.5" />
-              -{stats.removedHeight} px borttaget ({percentSaved}%)
+              {t.removedBadge(stats.removedHeight, percentSaved)}
             </span>
             <span className="text-slate-300">•</span>
-            <span>{stats.cutCount} reklamsektioner klippta</span>
+            <span>{t.sectionsCutCount(stats.cutCount)}</span>
           </div>
         </div>
 
@@ -233,10 +236,10 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
                   ? 'bg-white text-indigo-700 shadow-xs font-semibold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
-              title="Anpassa bildens bredd efter skärmen (standard)"
+              title={t.zoomFitWidth}
             >
               <Maximize2 className="w-3 h-3" />
-              <span>Anpassa bredd</span>
+              <span>{t.zoomFitWidth}</span>
             </button>
             <button
               id="preview-mode-100-btn"
@@ -246,10 +249,10 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
                   ? 'bg-white text-indigo-700 shadow-xs font-semibold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
-              title="Visa bilden i 100% knivskarp originalupplösning utan nedskalning"
+              title={t.sharpOriginalBadge}
             >
               <Sparkles className="w-3 h-3 text-indigo-500" />
-              <span>100% Skarp</span>
+              <span>100%</span>
             </button>
           </div>
 
@@ -257,21 +260,21 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
             <button
               id="preview-zoom-out-btn"
               onClick={() => handleZoom(-0.15)}
-              title="Zooma ut"
+              title={t.zoomOut}
               className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded transition"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
             <span
               className="px-2 py-1 text-[11px] font-mono text-slate-700 rounded font-medium min-w-[42px] text-center select-none"
-              title="Aktuell visningsskala"
+              title={t.zoom100}
             >
               {Math.round(scale * 100)}%
             </span>
             <button
               id="preview-zoom-in-btn"
               onClick={() => handleZoom(0.15)}
-              title="Zooma in"
+              title={t.zoomIn}
               className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded transition"
             >
               <ZoomIn className="w-3.5 h-3.5" />
@@ -289,7 +292,7 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
               onChange={(e) => setShowSeams(e.target.checked)}
               className="rounded border-slate-300 text-indigo-600 focus:ring-0 focus:ring-offset-0"
             />
-            <span className="hidden sm:inline">Markera skarvar</span>
+            <span className="hidden sm:inline">{t.seamMarkersLabel}</span>
           </label>
 
           {/* Format Selector */}
@@ -317,7 +320,7 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
             <button
               id="preview-new-tab-btn"
               onClick={handleOpenInNewTab}
-              title="Öppna ren bild i full storlek i ny flik"
+              title={t.openInNewTabTooltip}
               className="p-1.5 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-medium border border-slate-200 shadow-xs transition"
             >
               <ExternalLink className="w-3.5 h-3.5" />
@@ -333,12 +336,12 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
             {isCopied ? (
               <>
                 <Check className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="text-emerald-700 font-semibold">Kopierad!</span>
+                <span className="text-emerald-700 font-semibold">{t.copied}</span>
               </>
             ) : (
               <>
                 <Copy className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Kopiera</span>
+                <span className="hidden sm:inline">{t.copyImage}</span>
               </>
             )}
           </button>
@@ -350,7 +353,7 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
             className="flex items-center gap-1.5 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-xs transition"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Ladda ner ren bild</span>
+            <span>{t.downloadCleanBtn}</span>
           </button>
         </div>
       </div>
@@ -368,21 +371,21 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
               {scale === 1 ? (
                 <div className="flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200/80 px-3.5 py-1.5 rounded-full font-medium shadow-2xs">
                   <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span className="font-semibold text-slate-900">100% Knivskarp originalupplösning</span>
+                  <span className="font-semibold text-slate-900">{t.sharpOriginalBadge}</span>
                   <span className="text-emerald-700 font-mono font-medium">({imageInfo.width} × {stats.newHeight} px)</span>
-                  <span className="text-emerald-600/70 text-[11px]">• 1:1 pixelmatchning</span>
+                  <span className="text-emerald-600/70 text-[11px]">• {t.pixelMatchBadge}</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 bg-white text-slate-700 border border-slate-200 px-3.5 py-1.5 rounded-full shadow-2xs">
                   <span className="text-slate-600">
-                    Bredd anpassad till skärmen (<strong className="font-mono text-slate-900 font-semibold">{Math.round(scale * 100)}%</strong>)
+                    {t.fitWidthBadge(Math.round(scale * 100))}
                   </span>
                   <span className="text-slate-300">•</span>
                   <button
                     onClick={handleResetZoom}
                     className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-semibold underline decoration-indigo-300 hover:decoration-indigo-600 transition"
                   >
-                    <span>Växla till 100% skarp originalstorlek</span>
+                    <span>{t.switchToSharpBtn}</span>
                     <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
@@ -398,7 +401,7 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
             >
               <img
                 src={resultBlobUrl}
-                alt="Ren artikel utan reklam"
+                alt={t.cleanImageAlt}
                 className="w-full h-auto block select-none"
                 style={{
                   imageRendering: 'auto',
@@ -410,12 +413,12 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
             {/* Bottom floating helper */}
             <div className="mt-6 flex items-center gap-3 text-xs text-slate-600 bg-white px-4 py-2 rounded-full border border-slate-200 shadow-xs">
               <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
-              <span>Sektionerna har sammanfogats sömlöst i full originalkvalitet.</span>
+              <span>{t.seamlessQualityNotice}</span>
               <button
                 onClick={onBackToEditor}
                 className="text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 ml-1"
               >
-                <span>Justera fler klipp</span>
+                <span>{t.adjustMoreCutsBtn}</span>
                 <ArrowRight className="w-3 h-3" />
               </button>
             </div>
@@ -423,7 +426,7 @@ export const CleanPreview: React.FC<CleanPreviewProps> = ({
         ) : (
           <div className="flex flex-col items-center justify-center h-64 text-slate-400 space-y-2">
             <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs">Genererar ren bild...</span>
+            <span className="text-xs">{t.generatingCleanImage}</span>
           </div>
         )}
       </div>

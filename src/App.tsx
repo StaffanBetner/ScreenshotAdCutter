@@ -9,9 +9,18 @@ import { SplitComparison } from './components/SplitComparison';
 import { EmptyDropzone } from './components/EmptyDropzone';
 import { generateSampleArticle, stitchImage } from './utils/stitcher';
 import { clearStitchCache, getCachedStitch } from './utils/stitchCache';
+import { Language, Translations, translations, detectInitialLanguage, persistLanguage } from './i18n';
 import { Check, Info, Plus, Sliders, X, Eye, Github, ExternalLink } from 'lucide-react';
 
 export default function App() {
+  const [lang, setLang] = useState<Language>(detectInitialLanguage);
+  const t = translations[lang];
+
+  const handleLanguageChange = (newLang: Language) => {
+    setLang(newLang);
+    persistLanguage(newLang);
+  };
+
   const [imageInfo, setImageInfo] = useState<ImageInfo | null>(null);
   const [cutZones, setCutZones] = useState<CutZone[]>([]);
   const [activeZoneId, setActiveZoneId] = useState<string | null>(null);
@@ -95,7 +104,7 @@ export default function App() {
         setHistoryIndex(0);
         setViewMode('editor');
         setActiveZoneId(null);
-        showToast(`Laddade ${img.naturalWidth} × ${img.naturalHeight} px skärmdump`);
+        showToast(t.toastImageLoaded(img.naturalWidth, img.naturalHeight));
       };
       img.src = url;
     };
@@ -109,15 +118,15 @@ export default function App() {
       };
       reader.readAsDataURL(fileOrUrl);
     } else {
-      processImage(fileOrUrl, name || 'artikel-skarmdump.png');
+      processImage(fileOrUrl, name || 'screenshot.png');
     }
-  }, []);
+  }, [t]);
 
   // Load realistic sample article with 3 ads
   const handleLoadSample = async () => {
-    const sample = await generateSampleArticle();
-    loadImage(sample.dataUrl, [], 'exempel-artikel.png');
-    showToast('Exempelartikel laddad – markera över annonserna för att klippa!');
+    const sample = await generateSampleArticle(lang);
+    loadImage(sample.dataUrl, [], lang === 'sv' ? 'exempel-artikel.png' : 'sample-article.png');
+    showToast(t.toastSampleLoaded);
   };
 
   // Add cut zone
@@ -126,7 +135,7 @@ export default function App() {
       id: `cut-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       startY: Math.min(startY, endY),
       endY: Math.max(startY, endY),
-      label: label || `Klippzon (${Math.abs(endY - startY)} px)`,
+      label: label || t.defaultZoneLabel(Math.abs(endY - startY)),
       enabled: true,
     };
     const updated = [...cutZones, newZone].sort((a, b) => a.startY - b.startY);
@@ -140,7 +149,7 @@ export default function App() {
     const midY = Math.round(imageInfo.height / 2);
     const startY = Math.max(0, midY - 120);
     const endY = Math.min(imageInfo.height, midY + 120);
-    handleAddCutZone(startY, endY, 'Manuell klippzon');
+    handleAddCutZone(startY, endY, t.manualZoneLabel);
   };
 
   const handleDeleteCutZone = (id: string) => {
@@ -156,10 +165,10 @@ export default function App() {
 
   const handleResetCuts = () => {
     if (cutZones.length === 0) return;
-    if (window.confirm('Är du säker på att du vill ta bort alla klippzoner?')) {
+    if (window.confirm(t.confirmResetAll)) {
       handleCutZonesChange([]);
       setActiveZoneId(null);
-      showToast('Alla klippzoner rensades');
+      showToast(t.toastCleared);
     }
   };
 
@@ -242,15 +251,15 @@ export default function App() {
             new ClipboardItem({ 'image/png': blob }),
           ]);
           setIsCopied(true);
-          showToast('Ren bild kopierad till urklipp!');
+          showToast(t.toastCopied);
           setTimeout(() => setIsCopied(false), 2500);
         } catch {
           // Fallback if clipboard API permission restricted
-          showToast('Urklipp begränsat i webbläsaren. Ladda ner bilden i stället.');
+          showToast(t.toastCopyFailed);
         }
       }, 'image/png');
     } catch {
-      showToast('Kunde inte kopiera bilden.');
+      showToast(t.toastCopyFailed);
     }
   };
 
@@ -261,12 +270,12 @@ export default function App() {
     const canvas = cached ? cached.canvas : stitchImage(imageInfo.element, cutZones).canvas;
     const link = document.createElement('a');
     const cleanName = imageInfo.name
-      ? imageInfo.name.replace(/\.[^/.]+$/, '') + '-ren-artikel.png'
-      : 'ren-artikel.png';
+      ? imageInfo.name.replace(/\.[^/.]+$/, '') + '-clean.png'
+      : 'clean-article.png';
     link.download = cleanName;
     link.href = canvas.toDataURL('image/png');
     link.click();
-    showToast('Den rena bilden laddades ner!');
+    showToast(t.toastDownloaded);
   };
 
   return (
@@ -300,6 +309,9 @@ export default function App() {
         hasImage={imageInfo !== null}
         isCopied={isCopied}
         cutCount={cutZones.filter((z) => z.enabled).length}
+        lang={lang}
+        onLanguageChange={handleLanguageChange}
+        t={t}
       />
 
       {/* Main Work Area */}
@@ -308,6 +320,7 @@ export default function App() {
           <EmptyDropzone
             onFileSelect={loadImage}
             onLoadSample={handleLoadSample}
+            t={t}
           />
         ) : (
           <>
@@ -323,6 +336,7 @@ export default function App() {
                   activeZoneId={activeZoneId}
                   onSelectZone={setActiveZoneId}
                   scrollContainerRef={scrollContainerRef}
+                  t={t}
                 />
 
                 <div className="hidden xl:block h-full">
@@ -348,6 +362,7 @@ export default function App() {
                     onScrollToZone={handleScrollToZone}
                     canUndo={historyIndex > 0}
                     onUndo={handleUndo}
+                    t={t}
                   />
                 </div>
               </div>
@@ -360,20 +375,20 @@ export default function App() {
                   id="mobile-add-cut-btn"
                   onClick={handleAddManualCut}
                   className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 bg-indigo-600 active:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition"
-                  title="Lägg till en ny klippzon manuellt"
+                  title={t.mobileAddCut}
                 >
                   <Plus className="w-4 h-4" />
-                  <span>+ Klippzon</span>
+                  <span>{t.mobileAddCut}</span>
                 </button>
 
                 <button
                   id="mobile-zones-drawer-btn"
                   onClick={() => setIsMobileDrawerOpen(true)}
                   className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-slate-100 active:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold relative transition"
-                  title="Öppna lista över alla klippzoner"
+                  title={t.mobileZones}
                 >
                   <Sliders className="w-4 h-4 text-slate-600" />
-                  <span>Zoner</span>
+                  <span>{t.mobileZones}</span>
                   {cutZones.filter((z) => z.enabled).length > 0 && (
                     <span className="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                       {cutZones.filter((z) => z.enabled).length}
@@ -385,10 +400,10 @@ export default function App() {
                   id="mobile-preview-btn"
                   onClick={() => setViewMode('preview')}
                   className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-emerald-50 active:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold border border-emerald-200/60 transition"
-                  title="Se den färdiga rena bilden"
+                  title={t.mobileClean}
                 >
                   <Eye className="w-4 h-4 text-emerald-600" />
-                  <span>Ren bild</span>
+                  <span>{t.mobileClean}</span>
                 </button>
               </div>
             )}
@@ -404,7 +419,7 @@ export default function App() {
                   <div className="p-3 border-b border-slate-200 flex items-center justify-between bg-slate-50 rounded-t-2xl">
                     <div className="flex items-center gap-2">
                       <Sliders className="w-4 h-4 text-indigo-600" />
-                      <h3 className="text-sm font-bold text-slate-900">Klippsektioner</h3>
+                      <h3 className="text-sm font-bold text-slate-900">{t.mobileDrawerTitle}</h3>
                     </div>
                     <button
                       onClick={() => setIsMobileDrawerOpen(false)}
@@ -432,6 +447,7 @@ export default function App() {
                       }}
                       canUndo={historyIndex > 0}
                       onUndo={handleUndo}
+                      t={t}
                     />
                   </div>
                 </div>
@@ -445,6 +461,7 @@ export default function App() {
                 onBackToEditor={() => setViewMode('editor')}
                 onCopyClipboard={handleCopyClipboard}
                 isCopied={isCopied}
+                t={t}
               />
             )}
 
@@ -453,6 +470,7 @@ export default function App() {
                 imageInfo={imageInfo}
                 cutZones={cutZones}
                 onBackToEditor={() => setViewMode('editor')}
+                t={t}
               />
             )}
           </>
@@ -470,7 +488,7 @@ export default function App() {
           <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
           <span className="text-slate-700 font-medium truncate">Screenshot Ad Cutter</span>
           <span className="text-slate-300 hidden sm:inline">•</span>
-          <span className="hidden sm:inline text-slate-500 truncate">Öppen källkod</span>
+          <span className="hidden sm:inline text-slate-500 truncate">{t.openSource}</span>
         </div>
         <a
           id="github-repo-banner-link"
@@ -478,7 +496,7 @@ export default function App() {
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 font-medium text-slate-700 hover:text-indigo-600 transition bg-slate-50 hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg shadow-2xs group shrink-0"
-          title="Öppna GitHub-repositoryt i en ny flik"
+          title={t.githubRepoTooltip}
         >
           <Github className="w-3.5 h-3.5 text-slate-700 group-hover:text-indigo-600 transition" />
           <span className="hidden sm:inline text-slate-500 group-hover:text-indigo-600">GitHub:</span>

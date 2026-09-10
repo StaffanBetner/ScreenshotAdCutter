@@ -6,10 +6,10 @@ import {
   Eye,
   EyeOff,
   Sliders,
-  ChevronRight,
   ShieldCheck,
 } from 'lucide-react';
 import { CutZone, ImageInfo } from '../types';
+import { Translations } from '../i18n';
 
 interface CutZonesSidebarProps {
   imageInfo: ImageInfo;
@@ -23,6 +23,7 @@ interface CutZonesSidebarProps {
   onScrollToZone: (zone: CutZone, edge?: 'top' | 'bottom') => void;
   canUndo?: boolean;
   onUndo?: () => void;
+  t: Translations;
 }
 
 export const CutZonesSidebar: React.FC<CutZonesSidebarProps> = ({
@@ -37,6 +38,7 @@ export const CutZonesSidebar: React.FC<CutZonesSidebarProps> = ({
   onScrollToZone,
   canUndo,
   onUndo,
+  t,
 }) => {
   // Stats
   const activeCuts = cutZones.filter((z) => z.enabled);
@@ -64,23 +66,23 @@ export const CutZonesSidebar: React.FC<CutZonesSidebarProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sliders className="w-4 h-4 text-indigo-600" />
-            <h2 className="text-sm font-semibold text-slate-900">Klippsektioner</h2>
+            <h2 className="text-sm font-semibold text-slate-900">{t.sidebarTitle}</h2>
           </div>
           <span className="text-xs font-mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full border border-slate-200">
-            {activeCuts.length} aktiva
+            {t.activeZonesCount(activeCuts.length)}
           </span>
         </div>
 
         {/* Height Compression Summary */}
         <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-500">Ursprunglig höjd:</span>
+            <span className="text-slate-500">{t.originalHeight}</span>
             <span className="font-mono text-slate-700">{imageInfo.height} px</span>
           </div>
 
           <div className="flex items-center justify-between text-xs">
             <span className="text-rose-600 font-medium flex items-center gap-1">
-              <Scissors className="w-3 h-3" /> Reklam borttagen:
+              <Scissors className="w-3 h-3" /> {t.adsRemoved}
             </span>
             <span className="font-mono text-rose-600 font-semibold">
               -{totalRemovedHeight} px
@@ -89,7 +91,7 @@ export const CutZonesSidebar: React.FC<CutZonesSidebarProps> = ({
 
           <div className="flex items-center justify-between text-xs pt-1.5 border-t border-slate-200 font-medium">
             <span className="text-emerald-700 flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3" /> Ren artikel:
+              <ShieldCheck className="w-3 h-3" /> {t.cleanArticleHeight}
             </span>
             <span className="font-mono text-emerald-700 font-bold">
               {remainingHeight} px
@@ -102,17 +104,17 @@ export const CutZonesSidebar: React.FC<CutZonesSidebarProps> = ({
               <div
                 className="bg-emerald-500 h-full transition-all duration-300"
                 style={{ width: `${100 - percentSaved}%` }}
-                title={`Behålls: ${100 - percentSaved}%`}
+                title={t.keptPercent(100 - percentSaved)}
               />
               <div
                 className="bg-rose-500 h-full transition-all duration-300"
                 style={{ width: `${percentSaved}%` }}
-                title={`Klipps bort: ${percentSaved}%`}
+                title={t.cutPercent(percentSaved)}
               />
             </div>
             <div className="flex justify-between items-center text-[10px] text-slate-500 mt-1">
-              <span>Behålls: {100 - percentSaved}%</span>
-              <span className="text-rose-600 font-medium">Bortklippt: {percentSaved}%</span>
+              <span>{t.keptPercent(100 - percentSaved)}</span>
+              <span className="text-rose-600 font-medium">{t.cutPercent(percentSaved)}</span>
             </div>
           </div>
         </div>
@@ -125,7 +127,7 @@ export const CutZonesSidebar: React.FC<CutZonesSidebarProps> = ({
             className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl text-xs font-semibold shadow-xs transition"
           >
             <Plus className="w-4 h-4" />
-            <span>Lägg till klippzon</span>
+            <span>{t.addCutZoneBtn}</span>
           </button>
         </div>
       </div>
@@ -138,9 +140,9 @@ export const CutZonesSidebar: React.FC<CutZonesSidebarProps> = ({
               <Scissors className="w-6 h-6 opacity-60" />
             </div>
             <div className="space-y-1">
-              <p className="text-xs font-medium text-slate-600">Inga klippzoner ännu</p>
+              <p className="text-xs font-medium text-slate-600">{t.noCutZonesYet}</p>
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                Klicka och dra över bildytan för att markera sektioner som ska klippas bort.
+                {t.noCutZonesHint}
               </p>
             </div>
           </div>
@@ -167,7 +169,7 @@ export const CutZonesSidebar: React.FC<CutZonesSidebarProps> = ({
                     </span>
                     <input
                       type="text"
-                      value={zone.label || `Klipp ${index + 1}`}
+                      value={zone.label || t.cutLabel(index + 1)}
                       onChange={(e) => handleUpdateZone(zone.id, { label: e.target.value })}
                       onClick={(e) => e.stopPropagation()}
                       className="text-xs font-medium bg-transparent hover:bg-white focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 border border-transparent focus:border-slate-300 px-1 py-0.5 rounded text-slate-800 truncate w-full"
@@ -177,14 +179,14 @@ export const CutZonesSidebar: React.FC<CutZonesSidebarProps> = ({
                   <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => onToggleZone(zone.id)}
-                      title={zone.enabled ? 'Inaktivera' : 'Aktivera'}
+                      title={zone.enabled ? t.disableCut : t.enableCut}
                       className="p-1 hover:bg-slate-200/70 rounded text-slate-400 hover:text-slate-700 transition"
                     >
                       {zone.enabled ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5 text-slate-400" />}
                     </button>
                     <button
                       onClick={() => onDeleteZone(zone.id)}
-                      title="Ta bort"
+                      title={t.deleteCut}
                       className="p-1 hover:bg-rose-50 rounded text-slate-400 hover:text-rose-600 transition"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -195,7 +197,7 @@ export const CutZonesSidebar: React.FC<CutZonesSidebarProps> = ({
                 {/* Pixel Range Coordinates */}
                 <div className="grid grid-cols-2 gap-2 text-xs" onClick={(e) => e.stopPropagation()}>
                   <div className="bg-white px-2 py-1.5 rounded-lg border border-slate-200">
-                    <label className="text-[10px] text-slate-500 block">Från (Y-start):</label>
+                    <label className="text-[10px] text-slate-500 block">{t.fromY}</label>
                     <div className="flex items-center justify-between">
                       <input
                         type="number"
@@ -214,7 +216,7 @@ export const CutZonesSidebar: React.FC<CutZonesSidebarProps> = ({
                   </div>
 
                   <div className="bg-white px-2 py-1.5 rounded-lg border border-slate-200">
-                    <label className="text-[10px] text-slate-500 block">Till (Y-slut):</label>
+                    <label className="text-[10px] text-slate-500 block">{t.toY}</label>
                     <div className="flex items-center justify-between">
                       <input
                         type="number"
@@ -245,9 +247,9 @@ export const CutZonesSidebar: React.FC<CutZonesSidebarProps> = ({
                         onScrollToZone(zone, 'top');
                       }}
                       className="px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 rounded text-[10px] font-medium transition"
-                      title="Scrolla till zonens start"
+                      title={t.scrollToStart}
                     >
-                      Start
+                      {t.startEdge}
                     </button>
                     <button
                       onClick={(e) => {
@@ -255,9 +257,9 @@ export const CutZonesSidebar: React.FC<CutZonesSidebarProps> = ({
                         onScrollToZone(zone, 'bottom');
                       }}
                       className="px-1.5 py-0.5 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-700 rounded text-[10px] font-bold border border-rose-200 transition"
-                      title="Scrolla till zonens nedre slutkant"
+                      title={t.scrollToEnd}
                     >
-                      Slut ({zone.endY}px)
+                      {t.endEdge(zone.endY)}
                     </button>
                   </div>
                 </div>
@@ -269,3 +271,4 @@ export const CutZonesSidebar: React.FC<CutZonesSidebarProps> = ({
     </aside>
   );
 };
+

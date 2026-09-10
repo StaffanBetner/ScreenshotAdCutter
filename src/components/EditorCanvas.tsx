@@ -16,6 +16,7 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 import { CutZone, ImageInfo } from '../types';
+import { Translations } from '../i18n';
 
 interface EditorCanvasProps {
   imageInfo: ImageInfo;
@@ -27,6 +28,7 @@ interface EditorCanvasProps {
   activeZoneId: string | null;
   onSelectZone: (id: string | null) => void;
   scrollContainerRef: React.RefObject<HTMLDivElement | null>;
+  t: Translations;
 }
 
 type DragMode =
@@ -46,6 +48,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   activeZoneId,
   onSelectZone,
   scrollContainerRef,
+  t,
 }) => {
   const [scale, setScale] = useState<number>(1);
   const isUserZoomedRef = useRef<boolean>(false);
@@ -344,8 +347,8 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
         <div className="flex items-center gap-2 sm:gap-3 text-xs text-slate-600">
           <div className="flex items-center gap-1.5 text-indigo-600 font-medium">
             <Scissors className="w-4 h-4 shrink-0" />
-            <span className="hidden sm:inline">Klicka och dra över bildytan för att markera en klippzon</span>
-            <span className="sm:hidden font-semibold">Dra för att markera klippzon</span>
+            <span className="hidden sm:inline">{t.editorCanvasHint}</span>
+            <span className="sm:hidden font-semibold">{t.editorCanvasHintMobile}</span>
           </div>
           <span className="text-slate-300 hidden sm:inline">|</span>
           <span className="text-slate-500 hidden sm:inline">
@@ -363,7 +366,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
           <button
             id="zoom-out-btn"
             onClick={() => handleZoom(-0.15)}
-            title="Zooma ut"
+            title={t.zoomOut}
             className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded transition"
           >
             <ZoomOut className="w-3.5 h-3.5" />
@@ -371,7 +374,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
           <button
             id="zoom-reset-btn"
             onClick={handleResetZoom}
-            title="100% skala"
+            title={t.zoom100}
             className="px-2 py-1 text-[11px] font-mono text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded transition font-medium"
           >
             {Math.round(scale * 100)}%
@@ -379,7 +382,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
           <button
             id="zoom-in-btn"
             onClick={() => handleZoom(0.15)}
-            title="Zooma in"
+            title={t.zoomIn}
             className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded transition"
           >
             <ZoomIn className="w-3.5 h-3.5" />
@@ -387,7 +390,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
           <button
             id="zoom-fit-width-btn"
             onClick={handleFitWidth}
-            title="Anpassa bredd till skärmen"
+            title={t.zoomFitWidth}
             className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded transition"
           >
             <Maximize2 className="w-3.5 h-3.5" />
@@ -534,7 +537,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                         onSelectZone(zone.id);
                       }
                     }}
-                    title="Dra för att justera övre klippgräns"
+                    title={t.dragTopEdge}
                     className="absolute -top-3.5 left-0 right-0 h-7 cursor-ns-resize z-30 flex items-center justify-center touch-none group/top before:absolute before:-inset-y-3 before:left-0 before:right-0 before:content-['']"
                   >
                     <div className="w-20 h-2 bg-rose-600 group-hover/top:bg-rose-500 rounded-full shadow transition-all flex items-center justify-center">
@@ -569,7 +572,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                         onSelectZone(zone.id);
                       }
                     }}
-                    title="Dra för att flytta hela zonen"
+                    title={t.dragMoveZone}
                     className="absolute inset-x-0 inset-y-3 cursor-grab active:cursor-grabbing touch-none"
                   />
 
@@ -598,7 +601,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                         onSelectZone(zone.id);
                       }
                     }}
-                    title="Dra för att justera undre klippgräns"
+                    title={t.dragBottomEdge}
                     className="absolute -bottom-4.5 left-0 right-0 h-9 cursor-ns-resize z-30 flex items-center justify-center touch-none group/bottom before:absolute before:-inset-y-3 before:left-0 before:right-0 before:content-['']"
                   >
                     <div className="w-28 h-3.5 bg-rose-600 hover:bg-rose-500 rounded-full shadow-md transition-all flex items-center justify-center border-2 border-white">
@@ -613,7 +616,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                   >
                     <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                     <span className="font-semibold text-rose-100 text-[11px] whitespace-nowrap">
-                      Nedre kant:
+                      {t.bottomEdgeLabel}
                     </span>
                     <span className="font-mono text-[11px] text-amber-300 font-bold bg-rose-900/80 px-1.5 py-0.5 rounded whitespace-nowrap">
                       Y {zone.endY} px
@@ -624,7 +627,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                           e.stopPropagation();
                           handleNudge(zone.id, -10, 'bottom');
                         }}
-                        title="Flytta nedre kanten uppåt 10px"
+                        title={t.nudgeBottomUp}
                         className="p-1 hover:bg-rose-800 active:bg-rose-700 rounded text-rose-200"
                       >
                         <ChevronUp className="w-3.5 h-3.5" />
@@ -634,7 +637,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                           e.stopPropagation();
                           handleNudge(zone.id, 10, 'bottom');
                         }}
-                        title="Flytta nedre kanten nedåt 10px"
+                        title={t.nudgeBottomDown}
                         className="p-1 hover:bg-rose-800 active:bg-rose-700 rounded text-rose-200"
                       >
                         <ChevronDown className="w-3.5 h-3.5" />
@@ -649,7 +652,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                   >
                     <Scissors className="w-3.5 h-3.5 text-rose-400" />
                     <span className="font-semibold text-slate-100">
-                      {zone.label || 'Klipp'}
+                      {zone.label || t.cutLabel(1)}
                     </span>
                     <span className="font-mono text-[11px] text-amber-300 bg-slate-800 px-1.5 py-0.5 rounded">
                       -{zone.endY - zone.startY} px
@@ -665,7 +668,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                           e.stopPropagation();
                           handleNudge(zone.id, -4, 'both');
                         }}
-                        title="Flytta upp 4px"
+                        title={t.nudgeBothUp}
                         className="p-1 hover:bg-slate-700 rounded text-slate-300"
                       >
                         <ChevronUp className="w-3 h-3" />
@@ -675,7 +678,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                           e.stopPropagation();
                           handleNudge(zone.id, 4, 'both');
                         }}
-                        title="Flytta ner 4px"
+                        title={t.nudgeBothDown}
                         className="p-1 hover:bg-slate-700 rounded text-slate-300"
                       >
                         <ChevronDown className="w-3 h-3" />
@@ -688,7 +691,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                         e.stopPropagation();
                         onToggleCutZone(zone.id);
                       }}
-                      title={zone.enabled ? 'Inaktivera detta klipp' : 'Aktivera detta klipp'}
+                      title={zone.enabled ? t.disableCut : t.enableCut}
                       className="p-1 hover:bg-slate-700 rounded text-slate-300 hover:text-white"
                     >
                       {zone.enabled ? (
@@ -755,7 +758,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                 } left-1/2 -translate-x-1/2 z-40 bg-rose-600 active:bg-rose-700 hover:bg-rose-500 text-white text-xs font-bold px-3.5 py-2 rounded-full shadow-xl flex items-center gap-1.5 border border-rose-400/50 animate-bounce transition touch-manipulation whitespace-nowrap`}
               >
                 <ChevronDown className="w-4 h-4 text-amber-300 shrink-0" />
-                <span>Nedre kanten slutar vid Y: {activeZone.endY} px ↓ Klicka för att se</span>
+                <span>{t.bottomEdgeBelowNotice(activeZone.endY)}</span>
               </button>
             )}
 
@@ -768,7 +771,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                 } left-1/2 -translate-x-1/2 z-40 bg-slate-900 active:bg-slate-800 text-white text-xs font-bold px-3.5 py-2 rounded-full shadow-xl flex items-center gap-1.5 border border-slate-700 transition touch-manipulation whitespace-nowrap`}
               >
                 <ChevronUp className="w-4 h-4 text-amber-300 shrink-0" />
-                <span>Övre kanten börjar vid Y: {activeZone.startY} px ↑ Klicka för att se</span>
+                <span>{t.topEdgeAboveNotice(activeZone.startY)}</span>
               </button>
             )}
 
@@ -782,7 +785,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
               <div className="flex items-center justify-between px-1 gap-1">
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-900 truncate">
                   <Scissors className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                  <span className="truncate">Klipp: {activeZone.endY - activeZone.startY} px</span>
+                  <span className="truncate">{t.selectedZoneCut(activeZone.endY - activeZone.startY)}</span>
                   <span className="text-[10px] text-slate-400 font-mono shrink-0 hidden xs:inline">
                     ({activeZone.startY}–{activeZone.endY})
                   </span>
@@ -792,18 +795,18 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                     type="button"
                     onClick={() => setPanelPlacement(isPanelAtTop ? 'bottom' : 'top')}
                     className="flex items-center gap-0.5 text-xs text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 px-1.5 py-0.5 rounded-lg font-medium transition"
-                    title={isPanelAtTop ? 'Flytta rutan till botten' : 'Flytta rutan till toppen så den inte skymmer'}
+                    title={isPanelAtTop ? t.panelToBottom : t.panelToTop}
                   >
                     <ArrowUpDown className="w-3 h-3 text-slate-500" />
-                    <span className="text-[10px] font-semibold">{isPanelAtTop ? 'Nere ↓' : 'Uppe ↑'}</span>
+                    <span className="text-[10px] font-semibold">{isPanelAtTop ? t.panelDown : t.panelUp}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
                     className="text-xs text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-1.5 py-0.5 rounded-lg font-medium transition"
-                    title={isPanelCollapsed ? "Expandera justeringsverktyg" : "Minimera för att se mer av skärmen"}
+                    title={isPanelCollapsed ? t.expandPanel : t.minimizePanel}
                   >
-                    {isPanelCollapsed ? "Expandera ＋" : "Minimera −"}
+                    {isPanelCollapsed ? t.expandShort : t.minimizeShort}
                   </button>
                   <button
                     type="button"
@@ -811,7 +814,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                     className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded-lg font-semibold transition"
                   >
                     <Check className="w-3 h-3" />
-                    <span>Klar</span>
+                    <span>{t.doneBtn}</span>
                   </button>
                 </div>
               </div>
@@ -822,19 +825,19 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                 type="button"
                 onClick={() => scrollToPixelY(activeZone.startY)}
                 className="flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white hover:bg-slate-50 active:bg-slate-200 text-slate-700 rounded-lg font-medium border border-slate-200 shadow-2xs transition"
-                title="Scrolla så att övre kanten visas i bild"
+                title={t.goToTopEdge}
               >
                 <ChevronUp className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                <span className="truncate">Gå till överkant</span>
+                <span className="truncate">{t.goToTopEdge}</span>
               </button>
               <button
                 type="button"
                 onClick={() => scrollToPixelY(activeZone.endY)}
                 className="flex items-center justify-center gap-1.5 py-1.5 px-2 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-700 rounded-lg font-bold border border-rose-200 shadow-2xs transition"
-                title="Scrolla så att nedre kanten visas i bild"
+                title={t.goToBottomEdge(activeZone.endY)}
               >
                 <ChevronDown className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                <span className="truncate">Gå till underkant ({activeZone.endY} px)</span>
+                <span className="truncate">{t.goToBottomEdge(activeZone.endY)}</span>
               </button>
             </div>
 
@@ -846,37 +849,37 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                   <button
                     onClick={() => handleNudge(activeZone.id, -20, 'both')}
                     className="flex flex-col items-center justify-center py-2 px-1 bg-slate-100 active:bg-slate-200 text-slate-700 rounded-xl font-medium transition touch-manipulation shadow-2xs"
-                    title="Flytta hela zonen uppåt 20px"
+                    title={t.moveUpBtn}
                   >
                     <ChevronUp className="w-4 h-4 text-slate-600" />
-                    <span className="text-[10px] font-semibold">Flytta upp</span>
+                    <span className="text-[10px] font-semibold">{t.moveUpBtn}</span>
                   </button>
 
                   <button
                     onClick={() => handleNudge(activeZone.id, 20, 'both')}
                     className="flex flex-col items-center justify-center py-2 px-1 bg-slate-100 active:bg-slate-200 text-slate-700 rounded-xl font-medium transition touch-manipulation shadow-2xs"
-                    title="Flytta hela zonen nedåt 20px"
+                    title={t.moveDownBtn}
                   >
                     <ChevronDown className="w-4 h-4 text-slate-600" />
-                    <span className="text-[10px] font-semibold">Flytta ner</span>
+                    <span className="text-[10px] font-semibold">{t.moveDownBtn}</span>
                   </button>
 
                   <button
                     onClick={() => handleNudge(activeZone.id, 25, 'bottom')}
                     className="flex flex-col items-center justify-center py-2 px-1 bg-indigo-50 active:bg-indigo-100 text-indigo-700 rounded-xl font-medium transition touch-manipulation shadow-2xs border border-indigo-100"
-                    title="Öka klippzonens höjd med 25px (flyttar underkant ner)"
+                    title={t.increaseHeightBtn}
                   >
                     <Plus className="w-4 h-4 text-indigo-600" />
-                    <span className="text-[10px] font-semibold">+ Höjd</span>
+                    <span className="text-[10px] font-semibold">{t.increaseHeightBtn}</span>
                   </button>
 
                   <button
                     onClick={() => handleNudge(activeZone.id, -25, 'bottom')}
                     className="flex flex-col items-center justify-center py-2 px-1 bg-slate-100 active:bg-slate-200 text-slate-700 rounded-xl font-medium transition touch-manipulation shadow-2xs"
-                    title="Minska klippzonens höjd med 25px (flyttar underkant upp)"
+                    title={t.decreaseHeightBtn}
                   >
                     <Minus className="w-4 h-4 text-slate-600" />
-                    <span className="text-[10px] font-semibold">− Höjd</span>
+                    <span className="text-[10px] font-semibold">{t.decreaseHeightBtn}</span>
                   </button>
                 </div>
 
@@ -886,16 +889,16 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                     <button
                       onClick={() => handleNudge(activeZone.id, -5, 'bottom')}
                       className="px-2 py-0.5 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-700 rounded text-[10px] font-semibold border border-rose-200"
-                      title="Flytta nedre kanten upp 5px"
+                      title={t.bottomEdgeUpBtn}
                     >
-                      Underkant ▲
+                      {t.bottomEdgeUpBtn}
                     </button>
                     <button
                       onClick={() => handleNudge(activeZone.id, 5, 'bottom')}
                       className="px-2 py-0.5 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-700 rounded text-[10px] font-semibold border border-rose-200"
-                      title="Flytta nedre kanten ner 5px"
+                      title={t.bottomEdgeDownBtn}
                     >
-                      Underkant ▼
+                      {t.bottomEdgeDownBtn}
                     </button>
                   </div>
 
@@ -903,7 +906,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                     <button
                       onClick={() => onToggleCutZone(activeZone.id)}
                       className="text-slate-500 hover:text-slate-800 p-1 rounded hover:bg-slate-100 transition"
-                      title={activeZone.enabled ? 'Inaktivera zon' : 'Aktivera zon'}
+                      title={activeZone.enabled ? t.disableCut : t.enableCut}
                     >
                       {activeZone.enabled ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5 text-indigo-600" />}
                     </button>
@@ -916,7 +919,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                       className="flex items-center gap-1 text-rose-600 hover:text-rose-700 font-medium py-1 px-2 rounded-lg hover:bg-rose-50 transition"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span>Ta bort</span>
+                      <span>{t.deleteCut}</span>
                     </button>
                   </div>
                 </div>

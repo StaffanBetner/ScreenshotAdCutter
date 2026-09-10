@@ -181,10 +181,11 @@ function drawWrappedText(
 }
 
 /**
- * Generates an ultra-realistic tall sample Swedish article screenshot complete with 3 obvious ads
+ * Generates an ultra-realistic tall sample article screenshot complete with 3 obvious ads (supports Swedish and English)
  */
-export function generateSampleArticle(): Promise<{ dataUrl: string; width: number; height: number; suggestedCuts: CutZone[] }> {
+export function generateSampleArticle(lang: 'sv' | 'en' = 'sv'): Promise<{ dataUrl: string; width: number; height: number; suggestedCuts: CutZone[] }> {
   return new Promise((resolve) => {
+    const isEn = lang === 'en';
     const width = 800;
     const maxDraftHeight = 3600;
     const canvas = document.createElement('canvas');
@@ -205,11 +206,11 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
 
     ctx.fillStyle = '#38bdf8';
     ctx.font = 'bold 19px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('NORDISK TEKNIK & FRAMTID', margin, 40);
+    ctx.fillText(isEn ? 'GLOBAL TECH & FUTURES' : 'NORDISK TEKNIK & FRAMTID', margin, 40);
 
     ctx.fillStyle = '#94a3b8';
     ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    const metaTag = 'Måndag • Lästid ca 4 min • Premium';
+    const metaTag = isEn ? 'Monday • 4 min read • Premium' : 'Måndag • Lästid ca 4 min • Premium';
     const metaW = ctx.measureText(metaTag).width;
     ctx.fillText(metaTag, width - margin - metaW, 40);
 
@@ -218,13 +219,22 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
     // Breadcrumb / Category
     ctx.fillStyle = '#2563eb';
     ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('ANALYS & DIGITALT FOKUS', margin, y);
+    ctx.fillText(isEn ? 'ANALYSIS & FOCUS' : 'ANALYS & DIGITALT FOKUS', margin, y);
     y += 32;
 
     // Headline (Wrapped cleanly)
     ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 30px Georgia, Cambria, "Times New Roman", serif';
-    y = drawWrappedText(ctx, 'Så navigerar vi det digitala informationsflödet utan avbrott', margin, y, contentWidth, 40);
+    y = drawWrappedText(
+      ctx,
+      isEn
+        ? 'How to Navigate Long Digital Articles Without Constant Clutter'
+        : 'Så navigerar vi det digitala informationsflödet utan avbrott',
+      margin,
+      y,
+      contentWidth,
+      40
+    );
     y += 10;
 
     // Ingress (Wrapped cleanly)
@@ -232,7 +242,9 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
     ctx.font = '500 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     y = drawWrappedText(
       ctx,
-      'Långa texter och artiklar blir allt svårare att spara och arkivera när skärmdumpar bryts av massiva annonser och sponsrat brus. Här är metoden för att återta läsron.',
+      isEn
+        ? 'Longform articles are increasingly difficult to save and archive when screenshots are severed by massive banners and sponsored interruptions. Here is how to reclaim reading peace.'
+        : 'Långa texter och artiklar blir allt svårare att spara och arkivera när skärmdumpar bryts av massiva annonser och sponsrat brus. Här är metoden för att återta läsron.',
       margin,
       y,
       contentWidth,
@@ -254,7 +266,7 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
     ctx.fillText('Emma Lindqvist', margin + 46, y + 12);
     ctx.fillStyle = '#64748b';
     ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('Teknikskribent • Uppdaterad idag 11:20', margin + 46, y + 30);
+    ctx.fillText(isEn ? 'Tech Editor • Updated today 11:20' : 'Teknikskribent • Uppdaterad idag 11:20', margin + 46, y + 30);
     y += 56;
 
     // Hero Image Illustration Box
@@ -279,10 +291,10 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
 
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('Skärmens anatomi: Från brus till fokus', margin + 32, y + 145);
+    ctx.fillText(isEn ? 'Screen Anatomy: From Clutter to Focus' : 'Skärmens anatomi: Från brus till fokus', margin + 32, y + 145);
     ctx.fillStyle = '#94a3b8';
     ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('Illustration: Nordic Tech Studio', margin + 32, y + 175);
+    ctx.fillText(isEn ? 'Illustration: Studio Graphics' : 'Illustration: Nordic Tech Studio', margin + 32, y + 175);
     y += heroH + 36;
 
     // Paragraph 1
@@ -290,7 +302,9 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
     ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     y = drawWrappedText(
       ctx,
-      'När vi läser digitala reportage på telefonen eller datorn är upplevelsen ofta fragmenterad. Varje scrollrörelse ackompanjeras av instick, nyhetsbrevsinbjudningar och banners som rycker läsarens uppmärksamhet från innehållet.',
+      isEn
+        ? 'When reading digital features on phones or laptops, the reading experience is often fractured. Every scroll gesture is greeted by sponsored pop-ins, newsletter traps, and flashing banners.'
+        : 'När vi läser digitala reportage på telefonen eller datorn är upplevelsen ofta fragmenterad. Varje scrollrörelse ackompanjeras av instick, nyhetsbrevsinbjudningar och banners som rycker läsarens uppmärksamhet från innehållet.',
       margin,
       y,
       contentWidth,
@@ -299,7 +313,9 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
     y += 12;
     y = drawWrappedText(
       ctx,
-      'Att spara en artikel som en sammanhängande skärmdump är ett fantastiskt sätt att bevara kunskap, citera källor och arkivera texter för offline-läsning. Men när hälften av bildens höjd består av annonser förlorar dokumentet sitt värde.',
+      isEn
+        ? 'Saving an entire article as a continuous vertical screenshot is a fantastic way to archive research and quote references. But when half the height is filler ads, the file becomes unpleasant to read.'
+        : 'Att spara en artikel som en sammanhängande skärmdump är ett fantastiskt sätt att bevara kunskap, citera källor och arkivera texter för offline-läsning. Men när hälften av bildens höjd består av annonser förlorar dokumentet sitt värde.',
       margin,
       y,
       contentWidth,
@@ -324,18 +340,27 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
     // "ANNONS" badge
     ctx.fillStyle = '#c2410c';
     ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('SPONSRAT INNEHÅLL • REKLAM', margin, ad1Start + 32);
+    ctx.fillText(isEn ? 'SPONSORED CONTENT • ADVERTISEMENT' : 'SPONSRAT INNEHÅLL • REKLAM', margin, ad1Start + 32);
 
     // Ad content
     ctx.fillStyle = '#7c2d12';
     ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    drawWrappedText(ctx, '⚡ Byt till framtidens elavtal – Spara upp till 4 500 kr!', margin, ad1Start + 66, contentWidth, 28);
+    drawWrappedText(
+      ctx,
+      isEn ? '⚡ Switch to Clean Solar Energy – Save up to $450/Year!' : '⚡ Byt till framtidens elavtal – Spara upp till 4 500 kr!',
+      margin,
+      ad1Start + 66,
+      contentWidth,
+      28
+    );
 
     ctx.fillStyle = '#9a3412';
     ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     drawWrappedText(
       ctx,
-      'Ingen bindningstid. 100% fossilfri energi direkt till ditt hem. Jämför priset på under 60 sekunder och få 1 års rabatt på månadsavgiften.',
+      isEn
+        ? 'No long-term lock-in. 100% fossil-free electricity directly to your home. Compare prices in under 60 seconds and claim your discount.'
+        : 'Ingen bindningstid. 100% fossilfri energi direkt till ditt hem. Jämför priset på under 60 sekunder och få 1 års rabatt på månadsavgiften.',
       margin,
       ad1Start + 104,
       contentWidth,
@@ -345,23 +370,34 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
     // Ad CTA Button
     ctx.fillStyle = '#ea580c';
     ctx.beginPath();
-    ctx.roundRect(margin, ad1Start + 165, 210, 44, 7);
+    ctx.roundRect(margin, ad1Start + 165, 220, 44, 7);
     ctx.fill();
 
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('Jämför ditt elpris nu →', margin + 26, ad1Start + 192);
+    ctx.fillText(isEn ? 'Compare rates now →' : 'Jämför ditt elpris nu →', margin + 24, ad1Start + 192);
 
     ctx.fillStyle = '#c2410c';
     ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('Gäller endast nya kunder via denna kampanj. Energikollen AB.', margin, ad1Start + 242);
+    ctx.fillText(
+      isEn ? 'Valid for new residential customers. EnergyCheck Inc.' : 'Gäller endast nya kunder via denna kampanj. Energikollen AB.',
+      margin,
+      ad1Start + 242
+    );
 
     y = ad1Start + ad1Height + 36;
 
     // Subheading
     ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 23px Georgia, Cambria, "Times New Roman", serif';
-    y = drawWrappedText(ctx, 'Varför höjdledsklippning förändrar spelplanen', margin, y, contentWidth, 32);
+    y = drawWrappedText(
+      ctx,
+      isEn ? 'Why Vertical Section Cutting Changes the Game' : 'Varför höjdledsklippning förändrar spelplanen',
+      margin,
+      y,
+      contentWidth,
+      32
+    );
     y += 16;
 
     // Body text section 2
@@ -369,7 +405,9 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
     ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     y = drawWrappedText(
       ctx,
-      'Lösningen är förvånansvärt elegant: i stället för att förlita sig på klumpiga ad-blockers som ibland förstör artikelns typsättning eller blockerar själva bilderna, kan man i efterhand göra ett rent snitt genom skärmdumpen.',
+      isEn
+        ? 'The approach is remarkably straightforward: rather than fighting bloated adblockers that break stylesheets, one can simply perform surgical cuts directly on the saved screenshot.'
+        : 'Lösningen är förvånansvärt elegant: i stället för att förlita sig på klumpiga ad-blockers som ibland förstör artikelns typsättning eller blockerar själva bilderna, kan man i efterhand göra ett rent snitt genom skärmdumpen.',
       margin,
       y,
       contentWidth,
@@ -378,7 +416,9 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
     y += 12;
     y = drawWrappedText(
       ctx,
-      'Genom att identifiera de vertikala sektioner där annonser och irrelevanta puffar ligger, kan verktyget skära bort hela sektionen och foga samman de kvarvarande delarna sömlöst. Resultatet blir en ren, tidlös och lättläst sammanställning där ingress, brödtext och slutsats hänger ihop precis som en klassisk boktryckt text.',
+      isEn
+        ? 'By identifying the vertical strips where ads reside, the cutter slices them away and stitches the surrounding prose seamlessly together. The result is a clean, timeless document.'
+        : 'Genom att identifiera de vertikala sektioner där annonser och irrelevanta puffar ligger, kan verktyget skära bort hela sektionen och foga samman de kvarvarande delarna sömlöst. Resultatet blir en ren, tidlös och lättläst sammanställning där ingress, brödtext och slutsats hänger ihop precis som en klassisk boktryckt text.',
       margin,
       y,
       contentWidth,
@@ -397,7 +437,9 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
     ctx.font = 'italic 16px Georgia, serif';
     drawWrappedText(
       ctx,
-      '”Möjligheten att enkelt klippa bort 300 pixlar reklam mitt i en text och foga samman delarna gör att långa skärmdumpar äntligen blir användbara på riktigt.”',
+      isEn
+        ? '“Being able to snip out 300 pixels of sponsored clutter in the middle of a text makes screenshots truly readable again.”'
+        : '”Möjligheten att enkelt klippa bort 300 pixlar reklam mitt i en text och foga samman delarna gör att långa skärmdumpar äntligen blir användbara på riktigt.”',
       margin + 20,
       y + 36,
       contentWidth - 36,
@@ -421,17 +463,26 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
 
     ctx.fillStyle = '#fbbf24';
     ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('ANNONS • SPONSRAT INNEHÅLL', margin, ad2Start + 32);
+    ctx.fillText(isEn ? 'ADVERTISEMENT • SPONSORED' : 'ANNONS • SPONSRAT INNEHÅLL', margin, ad2Start + 32);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    drawWrappedText(ctx, '🎰 Nordens Största Spelsajt – 100 Free Spins Idag!', margin, ad2Start + 66, contentWidth, 28);
+    drawWrappedText(
+      ctx,
+      isEn ? '🎰 Premier Online Casino – 100 Free Spins Today!' : '🎰 Nordens Största Spelsajt – 100 Free Spins Idag!',
+      margin,
+      ad2Start + 66,
+      contentWidth,
+      28
+    );
 
     ctx.fillStyle = '#cbd5e1';
     ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     drawWrappedText(
       ctx,
-      'Upptäck över 2 000 slots och live casino med blixtsnabba uttag med BankID. Sätt in 100 kr och spela för 500 kr. Omsättningskrav 20x. Spela ansvarsfullt.',
+      isEn
+        ? 'Explore over 2,000 slots and live dealers with lightning-fast payouts. Deposit $10 and play for $50. Wagering terms apply. Please play responsibly.'
+        : 'Upptäck över 2 000 slots och live casino med blixtsnabba uttag med BankID. Sätt in 100 kr och spela för 500 kr. Omsättningskrav 20x. Spela ansvarsfullt.',
       margin,
       ad2Start + 104,
       contentWidth,
@@ -446,29 +497,48 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
 
     ctx.fillStyle = '#064e3b';
     ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('Hämta bonus här →', margin + 24, ad2Start + 198);
+    ctx.fillText(isEn ? 'Claim Bonus Here →' : 'Hämta bonus här →', margin + 24, ad2Start + 198);
 
     ctx.fillStyle = '#64748b';
     ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('18+ • Stödlinjen.se • Spelpaus.se • Regler & villkor gäller.', margin, ad2Start + 252);
+    ctx.fillText(
+      isEn ? '18+ only • Terms and conditions apply • GambleAware.org' : '18+ • Stödlinjen.se • Spelpaus.se • Regler & villkor gäller.',
+      margin,
+      ad2Start + 252
+    );
 
     y = ad2Start + ad2Height + 36;
 
     // Section 3
     ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 23px Georgia, Cambria, "Times New Roman", serif';
-    y = drawWrappedText(ctx, 'Steg-för-steg: Så skapar du den perfekta läsfilen', margin, y, contentWidth, 32);
+    y = drawWrappedText(
+      ctx,
+      isEn ? 'Step-by-Step: Creating the Clean Reading File' : 'Steg-för-steg: Så skapar du den perfekta läsfilen',
+      margin,
+      y,
+      contentWidth,
+      32
+    );
     y += 18;
 
     ctx.fillStyle = '#1e293b';
     ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    const steps = [
-      '1. Ta en skrollande skärmdump på din telefon eller dator av hela webbsidan.',
-      '2. Släpp in bilden i redigeraren eller klistra in direkt från urklipp.',
-      '3. Dra markeringar över de sektioner i höjdled som du vill ta bort.',
-      '4. Kontrollera förhandsgranskningen – sektionerna fogas samman millimeter-exakt.',
-      '5. Ladda ner den rena artikeln eller kopiera bilden direkt till dina anteckningar.',
-    ];
+    const steps = isEn
+      ? [
+          '1. Take a scrolling screenshot on your phone or laptop of the full article.',
+          '2. Drop the image into the editor or paste directly from clipboard.',
+          '3. Drag over unwanted vertical sections to snip them out.',
+          '4. Check the clean preview – sections are stitched together with pixel accuracy.',
+          '5. Download your clean article or copy it straight into your notes.',
+        ]
+      : [
+          '1. Ta en skrollande skärmdump på din telefon eller dator av hela webbsidan.',
+          '2. Släpp in bilden i redigeraren eller klistra in direkt från urklipp.',
+          '3. Dra markeringar över de sektioner i höjdled som du vill ta bort.',
+          '4. Kontrollera förhandsgranskningen – sektionerna fogas samman millimeter-exakt.',
+          '5. Ladda ner den rena artikeln eller kopiera bilden direkt till dina anteckningar.',
+        ];
     steps.forEach((step) => {
       y = drawWrappedText(ctx, step, margin, y, contentWidth, 26);
       y += 8;
@@ -490,17 +560,26 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
 
     ctx.fillStyle = '#1d4ed8';
     ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('NYHETSBREV & ERBJUDANDEN', margin, ad3Start + 32);
+    ctx.fillText(isEn ? 'NEWSLETTER & UPDATES' : 'NYHETSBREV & ERBJUDANDEN', margin, ad3Start + 32);
 
     ctx.fillStyle = '#1e3a8a';
     ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    drawWrappedText(ctx, '📩 Vill du ha fler sammanfattningar utan annonser?', margin, ad3Start + 66, contentWidth, 26);
+    drawWrappedText(
+      ctx,
+      isEn ? '📩 Want more curated tech summaries without ads?' : '📩 Vill du ha fler sammanfattningar utan annonser?',
+      margin,
+      ad3Start + 66,
+      contentWidth,
+      26
+    );
 
     ctx.fillStyle = '#475569';
     ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     drawWrappedText(
       ctx,
-      'Skriv in din e-postadress så skickar vi vår veckovisa kurering av de viktigaste tech-nyheterna.',
+      isEn
+        ? 'Enter your email address to receive our weekly curation of the most important stories.'
+        : 'Skriv in din e-postadress så skickar vi vår veckovisa kurering av de viktigaste tech-nyheterna.',
       margin,
       ad3Start + 100,
       contentWidth,
@@ -516,7 +595,7 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
     ctx.strokeRect(margin, ad3Start + 132, inputW, 42);
     ctx.fillStyle = '#94a3b8';
     ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('din.epost@foretag.se', margin + 14, ad3Start + 158);
+    ctx.fillText(isEn ? 'your.email@company.com' : 'din.epost@foretag.se', margin + 14, ad3Start + 158);
 
     const btnX = margin + inputW + 12;
     ctx.fillStyle = '#2563eb';
@@ -525,7 +604,7 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
     ctx.fill();
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('Prenumerera', btnX + 18, ad3Start + 158);
+    ctx.fillText(isEn ? 'Subscribe' : 'Prenumerera', btnX + (isEn ? 28 : 18), ad3Start + 158);
 
     y = ad3Start + ad3Height + 36;
 
@@ -534,7 +613,9 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
     ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     y = drawWrappedText(
       ctx,
-      'Slutresultatet är en artikel som går att arkivera, skriva ut eller läsa utan distraktioner. Att kunna trimma bort reklam vertikalt ger läsaren full kontroll över innehållet.',
+      isEn
+        ? 'The final result is an article you can read, share, and archive distraction-free. Trimming away ads vertically puts you in complete control.'
+        : 'Slutresultatet är en artikel som går att arkivera, skriva ut eller läsa utan distraktioner. Att kunna trimma bort reklam vertikalt ger läsaren full kontroll över innehållet.',
       margin,
       y,
       contentWidth,
@@ -552,7 +633,13 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
 
     ctx.fillStyle = '#64748b';
     ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('© 2026 Nordisk Teknik & Framtid • Alla rättigheter förbehållna • Integritetspolicy', margin, footerStart + 46);
+    ctx.fillText(
+      isEn
+        ? '© 2026 Global Tech & Futures • All rights reserved • Privacy Policy'
+        : '© 2026 Nordisk Teknik & Framtid • Alla rättigheter förbehållna • Integritetspolicy',
+      margin,
+      footerStart + 46
+    );
 
     y = footerStart + footerH;
 
@@ -571,21 +658,21 @@ export function generateSampleArticle(): Promise<{ dataUrl: string; width: numbe
         id: 'sample-ad-1',
         startY: Math.round(ad1Start),
         endY: Math.round(ad1Start + ad1Height),
-        label: 'Reklambanner (Elavtal)',
+        label: isEn ? 'Banner Ad (Energy)' : 'Reklambanner (Elavtal)',
         enabled: true,
       },
       {
         id: 'sample-ad-2',
         startY: Math.round(ad2Start),
         endY: Math.round(ad2Start + ad2Height),
-        label: 'Sponsrat Casino/Spel',
+        label: isEn ? 'Sponsored Casino Banner' : 'Sponsrat Casino/Spel',
         enabled: true,
       },
       {
         id: 'sample-ad-3',
         startY: Math.round(ad3Start),
         endY: Math.round(ad3Start + ad3Height),
-        label: 'Nyhetsbrevspuff',
+        label: isEn ? 'Newsletter Prompt' : 'Nyhetsbrevspuff',
         enabled: true,
       },
     ];

@@ -15,6 +15,7 @@ import {
   Github
 } from 'lucide-react';
 import { ViewMode } from '../types';
+import { Language, Translations } from '../i18n';
 
 interface HeaderProps {
   viewMode: ViewMode;
@@ -31,6 +32,9 @@ interface HeaderProps {
   hasImage: boolean;
   isCopied: boolean;
   cutCount: number;
+  lang: Language;
+  onLanguageChange: (lang: Language) => void;
+  t: Translations;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -48,6 +52,9 @@ export const Header: React.FC<HeaderProps> = ({
   hasImage,
   isCopied,
   cutCount,
+  lang,
+  onLanguageChange,
+  t,
 }) => {
   return (
     <header
@@ -65,11 +72,11 @@ export const Header: React.FC<HeaderProps> = ({
               Screenshot Ad Cutter
             </h1>
             <span className="text-[11px] font-semibold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200/80">
-              Artikelklippare
+              {t.brandBadge}
             </span>
           </div>
           <p className="text-xs text-slate-500 hidden sm:block">
-            Klipp bort reklamsektioner i höjdled och sammanfoga till en ren bild
+            {t.brandSubtitle}
           </p>
         </div>
       </div>
@@ -87,8 +94,8 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <Edit3 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-            <span className="hidden sm:inline">Redigera klipp</span>
-            <span className="sm:hidden">Redigera</span>
+            <span className="hidden sm:inline">{t.viewEditor}</span>
+            <span className="sm:hidden">{t.viewEditorShort}</span>
             {cutCount > 0 && (
               <span className="ml-0.5 sm:ml-1 px-1.5 py-0.2 bg-indigo-100 text-indigo-700 text-[10px] font-semibold rounded-full border border-indigo-200/60">
                 {cutCount}
@@ -106,7 +113,7 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <Eye className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-            <span>Ren bild</span>
+            <span>{t.viewClean}</span>
           </button>
 
           <button
@@ -119,12 +126,12 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <Columns2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-            <span>Jämför</span>
+            <span>{t.viewCompare}</span>
           </button>
         </div>
       )}
 
-      {/* Right Controls: History, Upload, Sample, Export */}
+      {/* Right Controls: History, Upload, Sample, Export & Language */}
       <div className="flex items-center gap-2">
         {hasImage && (
           <div className="hidden md:flex items-center gap-1 mr-1 border-r border-slate-200 pr-2">
@@ -132,7 +139,7 @@ export const Header: React.FC<HeaderProps> = ({
               id="undo-btn"
               onClick={onUndo}
               disabled={!canUndo}
-              title="Ångra (Ctrl+Z)"
+              title={t.undoTooltip}
               className="p-2 text-slate-500 hover:text-slate-800 disabled:opacity-30 disabled:pointer-events-none rounded-lg hover:bg-slate-100 transition"
             >
               <Undo2 className="w-4 h-4" />
@@ -141,7 +148,7 @@ export const Header: React.FC<HeaderProps> = ({
               id="redo-btn"
               onClick={onRedo}
               disabled={!canRedo}
-              title="Gör om (Ctrl+Y)"
+              title={t.redoTooltip}
               className="p-2 text-slate-500 hover:text-slate-800 disabled:opacity-30 disabled:pointer-events-none rounded-lg hover:bg-slate-100 transition"
             >
               <Redo2 className="w-4 h-4" />
@@ -149,7 +156,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               id="reset-cuts-btn"
               onClick={onResetCuts}
-              title="Återställ alla klipp"
+              title={t.resetAllTooltip}
               className="p-2 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
             >
               <RotateCcw className="w-4 h-4" />
@@ -163,8 +170,8 @@ export const Header: React.FC<HeaderProps> = ({
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 shadow-xs transition"
         >
           <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-          <span className="hidden sm:inline">Testa exempel</span>
-          <span className="sm:hidden">Exempel</span>
+          <span className="hidden sm:inline">{t.sampleArticle}</span>
+          <span className="sm:hidden">{t.sampleArticleShort}</span>
         </button>
 
         <button
@@ -173,7 +180,7 @@ export const Header: React.FC<HeaderProps> = ({
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 shadow-xs transition"
         >
           <Upload className="w-3.5 h-3.5 text-indigo-600" />
-          <span>Välj bild</span>
+          <span>{t.uploadButton}</span>
         </button>
 
         {hasImage && (
@@ -181,18 +188,18 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               id="quick-copy-btn"
               onClick={onCopyClipboard}
-              title="Kopiera ren bild till urklipp"
+              title={t.copyCleanImageTooltip}
               className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 shadow-xs transition"
             >
               {isCopied ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-emerald-600" />
-                  <span className="text-emerald-700 font-semibold">Kopierad!</span>
+                  <span className="text-emerald-700 font-semibold">{t.copied}</span>
                 </>
               ) : (
                 <>
                   <Copy className="w-3.5 h-3.5 text-slate-600" />
-                  <span>Kopiera</span>
+                  <span>{t.copyImage}</span>
                 </>
               )}
             </button>
@@ -203,11 +210,41 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition"
             >
               <Download className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Spara ren bild</span>
-              <span className="sm:hidden">Spara</span>
+              <span className="hidden sm:inline">{t.saveCleanImage}</span>
+              <span className="sm:hidden">{t.saveCleanImageShort}</span>
             </button>
           </div>
         )}
+
+        {/* Language selector toggle */}
+        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs ml-1">
+          <button
+            id="lang-toggle-sv"
+            onClick={() => onLanguageChange('sv')}
+            className={`px-1.5 py-1 rounded font-medium text-[11px] transition ${
+              lang === 'sv'
+                ? 'bg-white text-indigo-700 shadow-2xs font-bold'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+            title="Svenska"
+            aria-label="Byt till svenska"
+          >
+            SV
+          </button>
+          <button
+            id="lang-toggle-en"
+            onClick={() => onLanguageChange('en')}
+            className={`px-1.5 py-1 rounded font-medium text-[11px] transition ${
+              lang === 'en'
+                ? 'bg-white text-indigo-700 shadow-2xs font-bold'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+            title="English"
+            aria-label="Switch to English"
+          >
+            EN
+          </button>
+        </div>
 
         <a
           id="header-github-link"
