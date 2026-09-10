@@ -9,7 +9,7 @@ import { SplitComparison } from './components/SplitComparison';
 import { EmptyDropzone } from './components/EmptyDropzone';
 import { generateSampleArticle, stitchImage } from './utils/stitcher';
 import { clearStitchCache, getCachedStitch } from './utils/stitchCache';
-import { Check, Info, Plus, Sliders, X, Eye } from 'lucide-react';
+import { Check, Info, Plus, Sliders, X, Eye, Github, ExternalLink } from 'lucide-react';
 
 export default function App() {
   const [imageInfo, setImageInfo] = useState<ImageInfo | null>(null);
@@ -458,6 +458,34 @@ export default function App() {
           </>
         )}
       </main>
+
+      {/* Bottom Repository Banner */}
+      <footer
+        id="github-repo-banner"
+        className={`shrink-0 bg-white/95 backdrop-blur-xs border-t border-slate-200 px-3 sm:px-4 py-2 flex items-center justify-between gap-2 text-xs text-slate-500 z-20 ${
+          imageInfo && viewMode === 'editor' ? 'mb-14 lg:mb-0' : ''
+        }`}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+          <span className="text-slate-700 font-medium truncate">Screenshot Ad Cutter</span>
+          <span className="text-slate-300 hidden sm:inline">•</span>
+          <span className="hidden sm:inline text-slate-500 truncate">Öppen källkod</span>
+        </div>
+        <a
+          id="github-repo-banner-link"
+          href="https://github.com/StaffanBetner/ScreenshotAdCutter"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 font-medium text-slate-700 hover:text-indigo-600 transition bg-slate-50 hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg shadow-2xs group shrink-0"
+          title="Öppna GitHub-repositoryt i en ny flik"
+        >
+          <Github className="w-3.5 h-3.5 text-slate-700 group-hover:text-indigo-600 transition" />
+          <span className="hidden sm:inline text-slate-500 group-hover:text-indigo-600">GitHub:</span>
+          <span className="font-semibold">StaffanBetner/ScreenshotAdCutter</span>
+          <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-indigo-500" />
+        </a>
+      </footer>
 
       {/* Floating Toast Notification */}
       {toastMessage && (

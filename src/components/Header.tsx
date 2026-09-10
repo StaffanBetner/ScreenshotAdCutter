@@ -11,7 +11,8 @@ import {
   Edit3,
   RotateCcw,
   Copy,
-  Check
+  Check,
+  Github
 } from 'lucide-react';
 import { ViewMode } from '../types';
 
@@ -207,6 +208,18 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </div>
         )}
+
+        <a
+          id="header-github-link"
+          href="https://github.com/StaffanBetner/ScreenshotAdCutter"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-1.5 text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition"
+          title="GitHub: StaffanBetner/ScreenshotAdCutter"
+          aria-label="GitHub Repository"
+        >
+          <Github className="w-4 h-4" />
+        </a>
       </div>
     </header>
   );
